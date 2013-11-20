@@ -1,0 +1,54 @@
+Init TPM chip
+=============
+1) If you have not taken ownership, do so.
+tpm_takeownership -z
+
+2) SRK password must for now be Well Known Secret. If it's not, set it:
+tpm_changeownerauth -s -r
+
+
+Build simple-tpm-pk11
+=====================
+./configure && make
+
+
+For every user
+==============
+
+Create SSH client key
+---------------------
+./keygen -f genkey3
+
+Try the key out
+---------------
+dd if=/dev/urandom of=to-sign bs=1 count=35
+./sign -k genkey3 -f to-sign
+
+
+Extract the public key in SSH format
+------------------------------------
+ssh-keygen -D ./.libs/libsimple-tpm-pk11.so.0.0.0
+
+Install it where you want to log in.
+
+
+Log in using your new fancy key
+-------------------------------
+ssh -I ./.libs/libsimple-tpm-pk11.so.0.0.0 shell.example.com
+
+
+TODO
+====
+* Clean up code
+* Key importing
+* Authorized keys, both SRK and the keys.
+* Logging to ~/.something/log
+* Read config from ~/.something/config
+
+
+Some random notes, not instructions
+===================================
+openssl genrsa -out rsa-key 2048
+openssl rsa -in rsa-key -modulus
+# exponent is always 65537.
+ssh-keygen -f rsa-key -y > rsa-key.pub
