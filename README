@@ -46,6 +46,16 @@ TODO
 * Read config from ~/.something/config
 
 
+Reference links
+===============
+http://secgroup.ext.dsi.unive.it/projects/security-apis/tookan/
+http://secgroup.ext.dsi.unive.it/projects/security-apis/cryptokix/
+http://trousers.sourceforge.net/pkcs11.html
+http://www.trustedcomputinggroup.org/resources/tcg_software_stack_tss_specification
+http://www.infineon.com/dgdl/TPM+Key+Backup+and+Recovery.pdf
+http://www.engadget.com/2010/02/12/christopher-tarnovsky-hacks-infineons-unhackable-chip-we-pre/
+
+
 Some random notes, not instructions
 ===================================
 openssl genrsa -out rsa-key 2048
