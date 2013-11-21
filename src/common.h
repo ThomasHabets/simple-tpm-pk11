@@ -24,6 +24,7 @@ std::string parseError(int code);
 // Convert binary to hex.
 std::string to_hex(const std::string&);
 
+// Parse a keyfile into a struct. Does not use the TPM.
 Key parse_keyfile(const std::string&);
 
 // Generate a signing key inside the TPM.
@@ -34,6 +35,7 @@ std::string sign(const Key& key, const std::string& data);
 
 }  // namespace stpm
 
+// Pretty-print keys.
 std::ostream& operator<<(std::ostream&, struct stpm::Key&);
 
 

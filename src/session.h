@@ -1,4 +1,23 @@
+#include<stdexcept>
+#include<string>
+
 #include<opencryptoki/pkcs11.h>
+
+class PK11Error: public std::exception {
+ public:
+  PK11Error(int code): code(code), msg(get_msg()) {}
+  PK11Error(int code, const std::string&msg)
+  :code(code),
+   msg(get_msg() + ": " + msg)
+  {
+  }
+  virtual ~PK11Error() throw() {}
+
+  const int code;
+  const std::string msg;
+ private:
+  std::string get_msg() const;
+};
 
 class Session {
 public:

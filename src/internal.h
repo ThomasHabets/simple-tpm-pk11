@@ -3,12 +3,6 @@
 #define BEGIN_NAMESPACE(x) namespace x {
 #define END_NAMESPACE(x) }
 
-#define TSCALL(x, ...) {                                        \
-                TSS_RESULT res;                                 \
-                if (TSS_SUCCESS != (res = x(__VA_ARGS__))) {    \
-                        throw #x"(): " + parseError(res);       \
-                }                                               \
-        }
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 8

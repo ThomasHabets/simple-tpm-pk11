@@ -1,6 +1,8 @@
 #include"session.h"
 
 #include<cstring>
+#include<sstream>
+#include<iostream>
 #include<fstream>
 #include<iterator>
 #include<tuple>
@@ -14,6 +16,15 @@
 // openssl x509 -in foo.crt -pubkey
 // TODO: remove this openssl stuff, or make it fully supported.
 #define USE_OPENSSL_FOR_TESTING 0
+
+std::string
+PK11Error::get_msg() const
+{
+  std::stringstream ss;
+  ss << "Code=" << code;
+  return ss.str();
+}
+
 
 Session::Session(int slot)
   :slot_(slot),
@@ -42,22 +53,27 @@ void
 Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
                            CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
 {
+  const std::string keyfile{"genkey3"};
+  std::ifstream kf{keyfile};
+  if (!kf) {
+    throw PK11Error(CKR_GENERAL_ERROR,
+                    "Failed to open key file '" + keyfile + "'");
+  }
+  const std::string kfs{std::istreambuf_iterator<char>(kf),
+                        std::istreambuf_iterator<char>()};
+  const stpm::Key key = stpm::parse_keyfile(kfs);
+  const std::string exp = stpm::to_hex(key.exponent);
+  const std::string mod = stpm::to_hex(key.modulus);
   // TODO: actually check what was asked for. Currently assuming id,
   // mod, exponent since that's what the SSH client sent.
 
   // For polling of space needed. TODO: actual sizes here.
   pTemplate[0].ulValueLen = 1000000; // ID
-  pTemplate[1].ulValueLen = 1000000; // Mod
-  pTemplate[2].ulValueLen = 1000000; // Exponent.
+  pTemplate[1].ulValueLen = mod.size();
+  pTemplate[2].ulValueLen = exp.size();
 
   if (pTemplate[0].pValue) {
     // TODO: don't hard code key. Get it from ~/.simple-tpm-pk11/config.
-    std::ifstream kf("genkey3");
-    std::string kfs{std::istreambuf_iterator<char>(kf),
-        std::istreambuf_iterator<char>()};
-    auto key = stpm::parse_keyfile(kfs);
-    std::string exp = stpm::to_hex(key.exponent);
-    std::string mod = stpm::to_hex(key.modulus);
     BIGNUM *bnm = NULL;
     BN_hex2bn(&bnm, mod.c_str());
     int mlen = BN_bn2bin(bnm, (unsigned char*)pTemplate[1].pValue);
@@ -98,17 +114,23 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
   *pusSignatureLen = r;
 #else
     // TODO: don't hard code key. Get it from ~/.simple-tpm-pk11/config.
-  std::ifstream kf("genkey3");
+  const std::string keyfile{"genkey3"};
+  std::ifstream kf(keyfile);
+  if (!kf) {
+    throw PK11Error(CKR_GENERAL_ERROR,
+                    "Failed to open key file '" + keyfile + "'");
+  }
   const std::string kfs{std::istreambuf_iterator<char>(kf),
-      std::istreambuf_iterator<char>()};
-  auto key = stpm::parse_keyfile(kfs);
+                        std::istreambuf_iterator<char>()};
+  const stpm::Key key = stpm::parse_keyfile(kfs);
   const std::string data{pData, pData+usDataLen};
-  auto signature = stpm::sign(key, data);
+  const std::string signature{stpm::sign(key, data)};
   *pusSignatureLen = signature.size();
   memcpy(pSignature, signature.data(), signature.size());
-  printf("HABETS: signing %s (len %d), output %d bytes\n",
-         stpm::to_hex(data).c_str(), data.size(), *pusSignatureLen);
-#endif   
+  std::cout << "HABETS: signing %s " << stpm::to_hex(data)
+            << " (len " << data.size() << ")"
+            << ", output " << *pusSignatureLen << " bytes\n";
+#endif
 }
 /* ---- Emacs Variables ----
  * Local Variables:

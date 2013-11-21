@@ -42,6 +42,7 @@ wrapped_main(int argc, char **argv)
      << "exp " << stpm::to_hex(key.exponent) << std::endl
      << "mod " << stpm::to_hex(key.modulus) << std::endl
      << "blob " << stpm::to_hex(key.blob) << std::endl;
+  return 0;
 }
 
 /* ---- Emacs Variables ----

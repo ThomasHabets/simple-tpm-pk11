@@ -1,13 +1,14 @@
 #include<cstdio>
 #include<fstream>
+#include<functional>
 #include<iomanip>
 #include<iostream>
 #include<map>
 #include<sstream>
 #include<string>
-#include<tuple>
 
 #include"tss/tspi.h"
+#include"trousers/trousers.h"
 
 #include"common.h"
 #include"internal.h"
@@ -22,6 +23,7 @@ std::ostream& operator<<(std::ostream& o, struct stpm::Key& key)
 
 BEGIN_NAMESPACE(stpm);
 
+BEGIN_NAMESPACE();
 // TODO: Make key secret dynamic.
 BYTE key_secret[] = {
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -29,65 +31,35 @@ BYTE key_secret[] = {
 };
 
 
-std::string
-parseErrorCode(int code)
+// Jumpgate to tscall()
+#define TSCALL(x, ...) tscall(#x, [&]()->TSS_RESULT{return x(__VA_ARGS__);})
+TSS_RESULT
+tscall(const std::string& name, std::function<TSS_RESULT()> func)
 {
-  switch (code) {
-  case TSS_E_KEY_NO_MIGRATION_POLICY:
-    return "There's no migration policy object set for the addressed key.";
-  case TSS_E_BAD_PARAMETER:
-    return "One or more parameter is bad.";
-  case TSS_E_INTERNAL_ERROR:
-    return "Internal error.";
-  case TSS_E_INVALID_HANDLE:
-    return "Invalid handle.";
-  case TSS_E_PS_KEY_NOTFOUND:
-    return "The key cannot be found in the persistent storage database.";
-  case TPM_E_BAD_PARAM_SIZE:
-    return "The paramSize argument to the command has the incorrect value.";
-  case TSS_E_INVALID_ATTRIB_SUBFLAG:
-    return "Subflag value for attrib-functions inconsistent.";
-  case TSS_E_INVALID_OBJ_ACCESS:
-    return "The operation failed due to an invalid object status.";
-  case TPM_E_BAD_KEY_PROPERTY:
-    return "The key properties in TPM_KEY_PARMs are not supported by this TPM";
+  TSS_RESULT res;
+  if (TSS_SUCCESS != (res = func())) {
+    throw name + "(): " + parseError(res);
   }
-  
-  if (code & TSS_VENDOR_OFFSET) {
-    return "Vendor: " + parseErrorCode(code - TSS_VENDOR_OFFSET);
-  }
-  std::stringstream ss;
-  ss << std::setw(4) << std::setfill('0') << std::setbase(16) << code;
-  return "Unknown code 0x" + ss.str();
+  return res;
 }
+END_NAMESPACE();
 
 std::string
 parseError(int code)
 {
-  std::string layer{"Unknown"};
+  const std::string layer{Trspi_Error_Layer(code)};
+  const std::string err{Trspi_Error_String(code)};
 
-  switch (ERROR_LAYER(code)) {
-  case TSS_LAYER_TPM:
-    layer = "TPM";
-    break;
-  case TSS_LAYER_TDDL:
-    layer = "TDDL";
-    break;
-  case TSS_LAYER_TCS:
-    layer = "TCS";
-    break;
-  case TSS_LAYER_TSP:
-    layer = "TSP";
-    break;
-  }
-  const std::string err{parseErrorCode(ERROR_CODE(code))};
-
-  return layer + ": " + err;
+  std::stringstream ss;
+  ss << "Code=0x"
+     << std::setw(8) << std::setbase(16) << std::setfill('0') << code
+     << ": " << layer
+     << ": " << err;
+  return ss.str();
 }
 
 Key
 generate_key() {
-  TSS_RESULT res;
   TSS_HCONTEXT ctx;
   TSCALL(Tspi_Context_Create, &ctx);
   TSCALL(Tspi_Context_Connect, ctx, NULL);
@@ -213,7 +185,7 @@ to_bin(const std::string& s)
     throw "to_bin() on odd length string";
   }
   std::string ret;
-  for (int c = 0; c < s.size(); c+=2) {
+  for (unsigned c = 0; c < s.size(); c+=2) {
     auto t = s.substr(c, 2);
     ret += m[t];
   }

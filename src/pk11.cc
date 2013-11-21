@@ -10,9 +10,12 @@
 
 #include<cstdio>
 #include<cstring>
+#include<functional>
 #include<iostream>
 #include<string>
 #include<vector>
+
+#include"tss/tspi.h"
 
 #include"session.h"
 #include"internal.h"
@@ -146,19 +149,42 @@ C_FindObjectsFinal(CK_SESSION_HANDLE hSession)
   return CKR_OK;
 }
 
+void
+log_error(const std::string&msg)
+{
+  std::cerr << "PK11-LOGFILE: " << msg << std::endl;
+}
+
+CK_RV
+wrap_exceptions(const std::string& name, std::function<void()> f)
+{
+  std::cout << "HABETS: " << name << "()" << std::endl;
+  try {
+    f();
+    return CKR_OK;
+  } catch (const PK11Error& e) {
+    log_error(name + "(): " + e.msg);
+    return e.code;
+  } catch (const std::string& msg) {
+    log_error(name + "(): " + msg);
+  } catch (const char* msg) {
+    log_error(name + "(): " + msg);
+  } catch (...) {
+    log_error(name + "(): Unknown exception");
+  }
+  return CKR_FUNCTION_FAILED;
+}
+
+
 CK_RV
 C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject,
                     CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
 {
-  printf("HABETS: GetAttributeValue()\n");
-  try {
-    sessions[hSession].GetAttributeValue(hObject, pTemplate,
-                                         usCount);
-  } catch (const std::string& msg) {
-    std::cerr << msg << std::endl;
-  }
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{
+      sessions[hSession].GetAttributeValue(hObject, pTemplate, usCount);
+  });
 }
+
 CK_RV
 C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
            CK_OBJECT_HANDLE hKey)
