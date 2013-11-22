@@ -12,12 +12,6 @@
 
 #include <openssl/bn.h>
 
-// Optionally shell out to openssl for the RSA operation.
-// Get pubkey of a cert using something like:
-// openssl x509 -in foo.crt -pubkey
-// TODO: remove this openssl stuff, or make it fully supported.
-#define USE_OPENSSL_FOR_TESTING 0
-
 std::string
 PK11Error::get_msg() const
 {
@@ -142,23 +136,6 @@ void
 Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
               CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen)
 {
-#if USE_OPENSSL_FOR_TESTING
-  FILE *f;
-  if (!(f = fopen("to-sign", "w"))) {
-    throw "Rocks";
-  }
-  fwrite(pData, usDataLen, 1, f);
-  fclose(f);
-  system("openssl rsautl -sign -inkey rsa-key -out signed -in to-sign");
-  if (!(f = fopen("signed", "r"))) {
-    throw "Rocks";
-  }
-  int r;
-  r = fread(pSignature, 1, *pusSignatureLen, f);
-  fclose(f);
-  printf("HABETS: asked to sign %p (len %d), output %d bytes\n", pData, usDataLen, r);
-  *pusSignatureLen = r;
-#else
   // TODO: don't hard code key. Get it from ~/.simple-tpm-pk11/config.
   std::ifstream kf(config_.keyfile_);
   if (!kf) {
@@ -175,7 +152,6 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
   std::cout << "HABETS: signing %s " << stpm::to_hex(data)
             << " (len " << data.size() << ")"
             << ", output " << *pusSignatureLen << " bytes\n";
-#endif
 }
 /* ---- Emacs Variables ----
  * Local Variables:
