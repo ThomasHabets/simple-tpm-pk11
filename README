@@ -15,14 +15,16 @@ Build simple-tpm-pk11
 For every user
 ==============
 
-Create SSH client key
----------------------
-./keygen -f genkey3
+Create key & config
+-------------------
+mkdir ~/.simple-tpm-pk11/
+echo key my.key > ~/.simple-tpm-pk11/config
+./keygen -f ~/.simple-tpm-pk11/my.key
 
 Try the key out
 ---------------
 dd if=/dev/urandom of=to-sign bs=1 count=35
-./sign -k genkey3 -f to-sign
+./sign -k ~/.simple-tpm-pk11/my.key -f to-sign
 
 
 Extract the public key in SSH format
@@ -43,7 +45,6 @@ TODO
 * Key importing
 * Authorized keys, both SRK and the keys.
 * Logging to ~/.something/log
-* Read config from ~/.something/config
 
 
 Reference links
