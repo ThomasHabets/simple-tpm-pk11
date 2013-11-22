@@ -45,6 +45,9 @@ TODO
 * Key importing
 * Authorized keys, both SRK and the keys.
 * Logging to ~/.something/log
+* config option: log to stdout and/or stderr in addition to logfile
+* override config location with env.
+* Install in the correct place.
 
 
 Reference links
