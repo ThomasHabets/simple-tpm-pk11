@@ -1,11 +1,12 @@
 #include"session.h"
 
 #include<cstring>
+#include<libgen.h>
 #include<sstream>
 #include<iostream>
 #include<fstream>
 #include<iterator>
-#include<tuple>
+#include<vector>
 
 #include"common.h"
 
@@ -25,10 +26,56 @@ PK11Error::get_msg() const
   return ss.str();
 }
 
+Config::Config(const std::string& fn)
+    :configfile_(fn)
+{
+  std::ifstream f{fn};
+  if (!f) {
+    throw "TODO: opening config file failed";
+  }
+  read_file(f);
+}
 
-Session::Session(int slot)
-  :slot_(slot),
-   findpos_(0)
+std::string
+xdirname(const std::string& relative)
+{
+  std::vector<char> buf(relative.size());
+  memcpy(&buf[0], relative.data(), relative.size());
+  const std::string ret{dirname(&buf[0])};
+  if (ret == "/") {
+    return ret;
+  }
+  return ret + "/";
+}
+
+void
+Config::read_file(std::ifstream& f)
+{
+  while (!f.eof()) {
+    std::string line;
+    getline(f, line);
+    if (line.empty() || line[0] == '#') {
+      continue;
+    }
+
+    std::istringstream linetokens{line};
+    std::string cmd, rest;
+    getline(linetokens, cmd, ' ');
+    getline(linetokens, rest);
+
+    if (cmd == "key") {
+      keyfile_ = xdirname(configfile_) + rest;
+    } else if (cmd == "log") {
+      logfile_ = xdirname(configfile_) + rest;
+    } else {
+      throw "TODO: unknown config line: " + line;
+    }
+  }
+}
+
+Session::Session(const Config& config)
+    :config_(config),
+     findpos_(0)
 {
 }
 
@@ -53,11 +100,10 @@ void
 Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
                            CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
 {
-  const std::string keyfile{"genkey3"};
-  std::ifstream kf{keyfile};
+  std::ifstream kf{config_.keyfile_};
   if (!kf) {
     throw PK11Error(CKR_GENERAL_ERROR,
-                    "Failed to open key file '" + keyfile + "'");
+                    "Failed to open key file '" + config_.keyfile_ + "'");
   }
   const std::string kfs{std::istreambuf_iterator<char>(kf),
                         std::istreambuf_iterator<char>()};
@@ -113,12 +159,11 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
   printf("HABETS: asked to sign %p (len %d), output %d bytes\n", pData, usDataLen, r);
   *pusSignatureLen = r;
 #else
-    // TODO: don't hard code key. Get it from ~/.simple-tpm-pk11/config.
-  const std::string keyfile{"genkey3"};
-  std::ifstream kf(keyfile);
+  // TODO: don't hard code key. Get it from ~/.simple-tpm-pk11/config.
+  std::ifstream kf(config_.keyfile_);
   if (!kf) {
     throw PK11Error(CKR_GENERAL_ERROR,
-                    "Failed to open key file '" + keyfile + "'");
+                    "Failed to open key file '" + config_.keyfile_ + "'");
   }
   const std::string kfs{std::istreambuf_iterator<char>(kf),
                         std::istreambuf_iterator<char>()};

@@ -22,6 +22,14 @@
 
 BEGIN_NAMESPACE();
 
+const std::string config_dir = ".simple-tpm-pk11";
+void
+log_error(const std::string&msg)
+{
+  std::cerr << "PK11-LOGFILE: " << msg << std::endl;
+}
+
+
 CK_FUNCTION_LIST funclist;
 
 // TODO: allocate and free sessions properly.
@@ -63,9 +71,26 @@ C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
               CK_SESSION_HANDLE_PTR phSession)
 {
   printf("HABETS: OpenSession()\n");
-  sessions.push_back(Session(slotID));
-  *phSession = sessions.size() - 1;
-  return CKR_OK;
+  try {
+    const char *home{getenv("HOME")};
+    if (home == nullptr) {
+      log_error(std::string(__func__) + "(): getenv(HOME) failed.");
+      return CKR_FUNCTION_FAILED;
+    }
+
+    Config config{std::string{home} + "/" + config_dir + "/config"};
+
+    sessions.emplace_back(config);
+    *phSession = sessions.size() - 1;
+    return CKR_OK;
+  } catch (const std::string& msg) {
+    log_error(msg);
+  } catch (const char* msg) {
+    log_error(msg);
+  } catch (...) {
+    log_error("Unknown exception");
+  }
+  return CKR_FUNCTION_FAILED;
 }
 
 CK_RV
@@ -147,12 +172,6 @@ C_FindObjectsFinal(CK_SESSION_HANDLE hSession)
 {
   printf("HABETS: FindObjectsFinal()\n");
   return CKR_OK;
-}
-
-void
-log_error(const std::string&msg)
-{
-  std::cerr << "PK11-LOGFILE: " << msg << std::endl;
 }
 
 CK_RV

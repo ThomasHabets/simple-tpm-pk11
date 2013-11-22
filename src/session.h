@@ -19,12 +19,24 @@ class PK11Error: public std::exception {
   std::string get_msg() const;
 };
 
+class Config {
+ public:
+  Config(const std::string&);
+
+  std::string configfile_;
+  std::string keyfile_;
+  std::string logfile_;
+
+ private:
+  void read_file(std::ifstream&);
+};
+
 class Session {
 public:
-  Session(int slot);
+  Session(const Config&);
 
   void FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters);
-  int FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj); 
+  int FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj);
   void GetAttributeValue(CK_OBJECT_HANDLE hObject,
                          CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount);
 
@@ -32,7 +44,7 @@ public:
   void Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
             CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen);
 private:
-  int slot_;
+  Config config_;
   int findpos_;
 };
 /* ---- Emacs Variables ----
