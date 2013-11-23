@@ -1,13 +1,13 @@
 ACLOCAL_AMFLAGS=-I m4
 
-bin_PROGRAMS=keygen sign
+bin_PROGRAMS=stpm-keygen stpm-sign
 
-keygen_SOURCES=\
+stpm_keygen_SOURCES=\
 src/keygen.cc \
 src/common.cc \
 src/wrap_main.cc
 
-sign_SOURCES=\
+stpm_sign_SOURCES=\
 src/wrap_main.cc \
 src/common.cc \
 src/sign.cc

@@ -9,34 +9,51 @@ tpm_changeownerauth -s -r
 
 Build simple-tpm-pk11
 =====================
-./configure && make
+./configure && make && sudo make install
 
 
-For every user
-==============
+User setup
+==========
 
-Create key & config
--------------------
+1) Create key
+-------------
 mkdir ~/.simple-tpm-pk11/
-echo key my.key > ~/.simple-tpm-pk11/config
-./keygen -f ~/.simple-tpm-pk11/my.key
+stpm-keygen -f ~/.simple-tpm-pk11/my.key
 
-Try the key out
----------------
-dd if=/dev/urandom of=to-sign bs=1 count=35
-./sign -k ~/.simple-tpm-pk11/my.key -f to-sign
+Try the key out:
+  dd if=/dev/urandom of=to-sign bs=1 count=35
+  stpm-sign -k ~/.simple-tpm-pk11/my.key -f to-sign
 
+2) Create config
+----------------
+echo "key my.key" > ~/.simple-tpm-pk11/config
 
-Extract the public key in SSH format
-------------------------------------
-ssh-keygen -D ./.libs/libsimple-tpm-pk11.so.0.0.0
-
-Install it where you want to log in.
+Optionally add "log foo.log" in there too.
 
 
-Log in using your new fancy key
--------------------------------
-ssh -I ./.libs/libsimple-tpm-pk11.so.0.0.0 shell.example.com
+3) Extract the public key in SSH format
+---------------------------------------
+ssh-keygen -D /usr/local/lib/libsimple-tpm-pk11.so.0.0.0
+
+Install it where you want to log in, in the usual authorized_keys way.
+
+Try logging in using your new fancy key:
+  ssh -I /usr/local/lib/libsimple-tpm-pk11.so.0.0.0 shell.example.com
+
+4) Configure SSH to always use this module
+------------------------------------------
+Add this to ~/.ssh/config:
+    Host *
+          PKCS11Provider /usr/local/lib/libsimple-tpm-pk11.so.0.0.0
+
+then try:
+  ssh shell.example.com
+
+
+Other notes, to be put in manpages
+==================================
+* Setting SIMPLE_TPM_PK11_DEBUG env enables more verbose logging.
+* Adding "debug" to the config file does the same.
 
 
 TODO
@@ -44,7 +61,6 @@ TODO
 * Clean up code
 * Key importing
 * Authorized keys, both SRK and the keys.
-* Logging to ~/.something/log
 * config option: log to stdout and/or stderr in addition to logfile
 * override config location with env.
 * Install in the correct place.
