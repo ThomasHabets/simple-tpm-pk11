@@ -17,7 +17,7 @@ BEGIN_NAMESPACE();
 std::string
 xdirname(const std::string& relative)
 {
-  std::vector<char> buf(relative.size());
+  std::vector<char> buf(relative.size()+1);
   memcpy(&buf[0], relative.data(), relative.size());
   const std::string ret{dirname(&buf[0])};
   if (ret == "/") {
@@ -169,7 +169,7 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
                    << " signing " << data.size() << " bytes.\n";
   if (config_.debug_) {
     *config_.logfile_ << stpm::xctime()
-                      << " signing " << stpm::to_hex(data)
+                      << " DEBUG signing " << stpm::to_hex(data)
                       << " (len " << data.size() << ")"
                       << ", output " << *pusSignatureLen << " bytes\n";
   }

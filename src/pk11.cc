@@ -60,7 +60,6 @@ log_debug(const std::string& msg)
   auto cfg = get_config();
   if (cfg.debug_) {
     *cfg.logfile_ << xctime() << " DEBUG " << msg << std::endl;
-    std::cerr << xctime() << " DEBUG " << msg << std::endl;
   }
 }
 
