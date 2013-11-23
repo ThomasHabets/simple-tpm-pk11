@@ -33,10 +33,13 @@ Key generate_key();
 //
 std::string sign(const Key& key, const std::string& data);
 
+std::string xctime();
+
 }  // namespace stpm
 
 // Pretty-print keys.
 std::ostream& operator<<(std::ostream&, struct stpm::Key&);
+
 
 
 /* ---- Emacs Variables ----

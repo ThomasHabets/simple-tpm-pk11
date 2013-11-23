@@ -1,5 +1,6 @@
 #include<stdexcept>
 #include<string>
+#include<memory>
 
 #include<opencryptoki/pkcs11.h>
 
@@ -25,7 +26,9 @@ class Config {
 
   std::string configfile_;
   std::string keyfile_;
-  std::string logfile_;
+  std::string logfilename_;
+  std::shared_ptr<std::ofstream> logfile_;
+  bool debug_;
 
  private:
   void read_file(std::ifstream&);

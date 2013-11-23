@@ -8,28 +8,12 @@
 #include<iterator>
 #include<vector>
 
-#include"common.h"
-
 #include <openssl/bn.h>
 
-std::string
-PK11Error::get_msg() const
-{
-  std::stringstream ss;
-  ss << "Code=" << code;
-  return ss.str();
-}
+#include"common.h"
+#include"internal.h"
 
-Config::Config(const std::string& fn)
-    :configfile_(fn)
-{
-  std::ifstream f{fn};
-  if (!f) {
-    throw "TODO: opening config file failed";
-  }
-  read_file(f);
-}
-
+BEGIN_NAMESPACE();
 std::string
 xdirname(const std::string& relative)
 {
@@ -41,6 +25,35 @@ xdirname(const std::string& relative)
   }
   return ret + "/";
 }
+END_NAMESPACE();
+
+std::string
+PK11Error::get_msg() const
+{
+  std::stringstream ss;
+  ss << "Code=" << code;
+  return ss.str();
+}
+
+Config::Config(const std::string& fn)
+  :configfile_(fn),
+   logfile_(new std::ofstream),
+   debug_(false)
+
+{
+  std::ifstream f{fn};
+  if (!f) {
+    throw "TODO: opening config file failed";
+  }
+  read_file(f);
+  if (*logfile_) {
+    logfile_->open(logfilename_, std::ofstream::app);
+    if (!logfile_) {
+      throw "Unable to open logfile " + logfilename_;
+    }
+  }
+}
+
 
 void
 Config::read_file(std::ifstream& f)
@@ -60,7 +73,9 @@ Config::read_file(std::ifstream& f)
     if (cmd == "key") {
       keyfile_ = xdirname(configfile_) + rest;
     } else if (cmd == "log") {
-      logfile_ = xdirname(configfile_) + rest;
+      logfilename_ = xdirname(configfile_) + rest;
+    } else if (cmd == "debug") {
+      debug_ = true;
     } else {
       throw "TODO: unknown config line: " + line;
     }
@@ -149,9 +164,15 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
   const std::string signature{stpm::sign(key, data)};
   *pusSignatureLen = signature.size();
   memcpy(pSignature, signature.data(), signature.size());
-  std::cout << "HABETS: signing %s " << stpm::to_hex(data)
-            << " (len " << data.size() << ")"
-            << ", output " << *pusSignatureLen << " bytes\n";
+
+  *config_.logfile_ << stpm::xctime()
+                   << " signing " << data.size() << " bytes.\n";
+  if (config_.debug_) {
+    *config_.logfile_ << stpm::xctime()
+                      << " signing " << stpm::to_hex(data)
+                      << " (len " << data.size() << ")"
+                      << ", output " << *pusSignatureLen << " bytes\n";
+  }
 }
 /* ---- Emacs Variables ----
  * Local Variables:

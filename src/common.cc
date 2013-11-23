@@ -1,4 +1,5 @@
 #include<cstdio>
+#include<cstring>
 #include<fstream>
 #include<functional>
 #include<iomanip>
@@ -43,6 +44,20 @@ tscall(const std::string& name, std::function<TSS_RESULT()> func)
   return res;
 }
 END_NAMESPACE();
+
+std::string
+xctime()
+{
+  time_t t;
+  time(&t);
+  char buf[128] = {0};
+  ctime_r(&t, buf);
+  while (strlen(buf) && buf[strlen(buf)-1] == '\n') {
+    buf[strlen(buf)-1] = 0;
+  }
+  return buf;
+}
+
 
 std::string
 parseError(int code)
