@@ -1,5 +1,6 @@
 #include"session.h"
 
+#include<cassert>
 #include<cstring>
 #include<libgen.h>
 #include<sstream>
@@ -117,28 +118,44 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
   const std::string kfs{std::istreambuf_iterator<char>(kf),
                         std::istreambuf_iterator<char>()};
   const stpm::Key key = stpm::parse_keyfile(kfs);
-  const std::string exp = stpm::to_hex(key.exponent);
-  const std::string mod = stpm::to_hex(key.modulus);
-  // TODO: actually check what was asked for. Currently assuming id,
-  // mod, exponent since that's what the SSH client sent.
 
-  // For polling of space needed. TODO: actual sizes here.
-  pTemplate[0].ulValueLen = 1000000; // ID
-  pTemplate[1].ulValueLen = mod.size();
-  pTemplate[2].ulValueLen = exp.size();
 
-  if (pTemplate[0].pValue) {
-    // TODO: don't hard code key. Get it from ~/.simple-tpm-pk11/config.
-    BIGNUM *bnm = NULL;
-    BN_hex2bn(&bnm, mod.c_str());
-    int mlen = BN_bn2bin(bnm, (unsigned char*)pTemplate[1].pValue);
+  for (unsigned i = 0; i < usCount; i++) {
+    switch (pTemplate[i].type) {
+    case CKA_ID:
+      // TODO: populate properly.
+      pTemplate[i].ulValueLen = 10; // ID
+      break;
 
-    BIGNUM *bne = NULL;
-    BN_hex2bn(&bne, exp.c_str());
-    int elen = BN_bn2bin(bne, (unsigned char*)pTemplate[2].pValue);
+    case CKA_MODULUS:
+      pTemplate[i].ulValueLen = key.modulus.size();
+      if (pTemplate[i].pValue) {
+        BIGNUM *bnm = NULL;
+        // TODO: copy, instead of converting back and forth.
+        BN_hex2bn(&bnm, stpm::to_hex(key.modulus).c_str());
+        unsigned mlen = BN_bn2bin(bnm, (unsigned char*)pTemplate[i].pValue);
+        assert(mlen == key.modulus.size());
+      }
+      break;
 
-    pTemplate[1].ulValueLen = mlen;
-    pTemplate[2].ulValueLen = elen;
+    case CKA_PUBLIC_EXPONENT:
+      pTemplate[i].ulValueLen = key.exponent.size();
+      if (pTemplate[i].pValue) {
+        BIGNUM *bne = NULL;
+        // TODO: copy, instead of converting back and forth.
+        BN_hex2bn(&bne, stpm::to_hex(key.exponent).c_str());
+        unsigned elen = BN_bn2bin(bne, (unsigned char*)pTemplate[i].pValue);
+        assert(elen == key.exponent.size());
+      }
+      break;
+
+    default:
+      // TODO: handle unknowns better.
+      pTemplate[i].ulValueLen = 10;
+      *config_.logfile_ << stpm::xctime()
+                        << " unknown attribute: "
+                        << pTemplate[i].type << std::endl << std::flush;
+    }
   }
 }
 
@@ -166,12 +183,14 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
   memcpy(pSignature, signature.data(), signature.size());
 
   *config_.logfile_ << stpm::xctime()
-                   << " signing " << data.size() << " bytes.\n";
+                    << " signing " << data.size() << " bytes."
+                    << std::endl;
   if (config_.debug_) {
     *config_.logfile_ << stpm::xctime()
                       << " DEBUG signing " << stpm::to_hex(data)
                       << " (len " << data.size() << ")"
-                      << ", output " << *pusSignatureLen << " bytes\n";
+                      << ", output " << *pusSignatureLen << " bytes"
+                      << std::endl;
   }
 }
 /* ---- Emacs Variables ----

@@ -40,7 +40,7 @@ log_error(const std::string& msg)
 {
   try {
     auto cfg = get_config();
-    *cfg.logfile_ << xctime() << " " << msg << "\n";
+    *cfg.logfile_ << xctime() << " " << msg << std::endl;
   } catch(...) {
     std::cerr << "PK11 ERROR> " << msg << std::endl;
   }
