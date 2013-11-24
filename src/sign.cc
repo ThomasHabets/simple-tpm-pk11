@@ -42,12 +42,22 @@ wrapped_main(int argc, char **argv)
     }
   }
   if (keyfile.empty() || signfile.empty()) {
+    std::cerr << "stpm-sign: Need to specify keyfile and data file"
+              << std::endl;
     return usage(1);
   }
   std::ifstream kf(keyfile);
+  if (!kf) {
+    std::cerr << "stpm-sign: Can't open keyfile '" << keyfile << "'\n";
+    return usage(1);
+  }
   std::string kfs{std::istreambuf_iterator<char>(kf),
                   std::istreambuf_iterator<char>()};
   std::ifstream sf(signfile);
+  if (!sf) {
+    std::cerr << "stpm-sign: Can't open file '" << signfile << "'\n";
+    return usage(1);
+  }
   std::string sfs{std::istreambuf_iterator<char>(sf),
                   std::istreambuf_iterator<char>()};
   auto key = stpm::parse_keyfile(kfs);
