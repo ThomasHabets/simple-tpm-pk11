@@ -1,21 +1,19 @@
 #include<cstdlib>
-#include<iostream>
 #include<fstream>
-#include<tuple>
+#include<iostream>
 #include<unistd.h>
 
 #include"common.h"
 #include"internal.h"
 
 BEGIN_NAMESPACE();
-void
+int
 usage(int rc)
 {
   std::cout << "Usage: keygen [ -hv ] -o <output file>\n";
-  exit(rc);
+  return rc;
 }
 END_NAMESPACE();
-
 
 int
 wrapped_main(int argc, char **argv)
@@ -25,16 +23,16 @@ wrapped_main(int argc, char **argv)
   while (EOF != (c = getopt(argc, argv, "ho:v"))) {
     switch (c) {
     case 'h':
-      usage(0);
+      return usage(0);
     case 'o':
       output = optarg;
       break;
     default:
-      usage(1);
+      return usage(1);
     }
   }
   if (output.empty()) {
-    usage(1);
+    return usage(1);
   }
   auto key = stpm::generate_key();
   std::ofstream fo(output);
@@ -44,7 +42,6 @@ wrapped_main(int argc, char **argv)
      << "blob " << stpm::to_hex(key.blob) << std::endl;
   return 0;
 }
-
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 2

@@ -30,7 +30,7 @@ Key parse_keyfile(const std::string&);
 // Generate a signing key inside the TPM.
 Key generate_key();
 
-//
+// Sign plain data.
 std::string sign(const Key& key, const std::string& data);
 
 std::string xctime();

@@ -7,21 +7,21 @@
  * In this file is the glue between the trousers C API and the rest of the
  * simple-tpm-pk11 code which is C++.
  */
-#include<ctime>
 #include<cstdio>
 #include<cstring>
+#include<ctime>
+#include<fstream>
 #include<functional>
 #include<iostream>
-#include<fstream>
 #include<string>
 #include<syslog.h>
 #include<vector>
 
 #include"tss/tspi.h"
 
-#include"session.h"
 #include"common.h"
 #include"internal.h"
+#include"session.h"
 
 using stpm::xctime;
 
@@ -78,6 +78,26 @@ get_config()
 }
 
 CK_RV
+wrap_exceptions(const std::string& name, std::function<void()> f)
+{
+  log_debug(name + "()");
+  try {
+    f();
+    return CKR_OK;
+  } catch (const PK11Error& e) {
+    log_error(name + "(): " + e.msg);
+    return e.code;
+  } catch (const std::string& msg) {
+    log_error(name + "(): " + msg);
+  } catch (const char* msg) {
+    log_error(name + "(): " + msg);
+  } catch (...) {
+    log_error(name + "(): Unknown exception");
+  }
+  return CKR_FUNCTION_FAILED;
+}
+
+CK_RV
 C_GetInfo(CK_INFO_PTR pInfo)
 {
   log_debug("GetInfo()");
@@ -86,7 +106,9 @@ C_GetInfo(CK_INFO_PTR pInfo)
   pInfo->cryptokiVersion.minor = 1;
   // TODO: flags
   strcpy((char*)pInfo->manufacturerID, "habets");
-  strcpy((char*)pInfo->libraryDescription, "habets descr");
+  strcpy((char*)pInfo->libraryDescription, "simple-tpm-pk11");
+
+  // TODO: take these version numbers from somewhere canonical.
   pInfo->libraryVersion.major = 0;
   pInfo->libraryVersion.minor = 1;
   return CKR_OK;
@@ -111,19 +133,10 @@ C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
                                 CK_NOTIFICATION event, CK_VOID_PTR pApplication),
               CK_SESSION_HANDLE_PTR phSession)
 {
-  log_debug("OpenSession()");
-  try {
+  return wrap_exceptions(__func__, [&]{
     sessions.emplace_back(get_config());
     *phSession = sessions.size() - 1;
-    return CKR_OK;
-  } catch (const std::string& msg) {
-    log_error(msg);
-  } catch (const char* msg) {
-    log_error(msg);
-  } catch (...) {
-    log_error("Unknown exception");
-  }
-  return CKR_FUNCTION_FAILED;
+  });
 }
 
 CK_RV
@@ -153,10 +166,12 @@ C_Logout(CK_SESSION_HANDLE hSession)
 CK_RV
 C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 {
+  // TODO: fill these out from token.
   strcpy((char*)pInfo->label, "token label");
   strcpy((char*)pInfo->manufacturerID, "manuf id");
   strcpy((char*)pInfo->model, "model");
   strcpy((char*)pInfo->serialNumber, "serial");
+
   //pInfo->flags
   pInfo->ulMaxSessionCount = 1000;
   pInfo->ulSessionCount = 0;
@@ -208,27 +223,6 @@ C_FindObjectsFinal(CK_SESSION_HANDLE hSession)
 }
 
 CK_RV
-wrap_exceptions(const std::string& name, std::function<void()> f)
-{
-  log_debug(name + "()");
-  try {
-    f();
-    return CKR_OK;
-  } catch (const PK11Error& e) {
-    log_error(name + "(): " + e.msg);
-    return e.code;
-  } catch (const std::string& msg) {
-    log_error(name + "(): " + msg);
-  } catch (const char* msg) {
-    log_error(name + "(): " + msg);
-  } catch (...) {
-    log_error(name + "(): Unknown exception");
-  }
-  return CKR_FUNCTION_FAILED;
-}
-
-
-CK_RV
 C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject,
                     CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
 {
@@ -251,14 +245,10 @@ C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
        CK_ULONG usDataLen, CK_BYTE_PTR pSignature,
        CK_ULONG_PTR pusSignatureLen)
 {
-  log_debug("Sign()");
-  try {
+  return wrap_exceptions(__func__, [&]{
     sessions[hSession].Sign(pData, usDataLen,
                             pSignature, pusSignatureLen);
-  } catch (const std::string& msg) {
-    std::cerr << msg << std::endl;
-  }
-  return CKR_OK;
+  });
 }
 
 CK_RV

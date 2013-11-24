@@ -2,11 +2,11 @@
 
 #include<cassert>
 #include<cstring>
+#include<fstream>
+#include<iostream>
+#include<iterator>
 #include<libgen.h>
 #include<sstream>
-#include<iostream>
-#include<fstream>
-#include<iterator>
 #include<vector>
 
 #include <openssl/bn.h>
@@ -15,6 +15,9 @@
 #include"internal.h"
 
 BEGIN_NAMESPACE();
+
+// Like dirname(3), but always returns a string ending in '/', thus
+// always being safe for appeding a filename to.
 std::string
 xdirname(const std::string& relative)
 {
@@ -54,7 +57,6 @@ Config::Config(const std::string& fn)
     }
   }
 }
-
 
 void
 Config::read_file(std::ifstream& f)
@@ -99,6 +101,9 @@ int
 Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
 {
   if (findpos_ == 1) {
+    return 0;
+  }
+  if (maxobj == 0) {
     return 0;
   }
   *obj = 0;
@@ -168,7 +173,6 @@ void
 Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
               CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen)
 {
-  // TODO: don't hard code key. Get it from ~/.simple-tpm-pk11/config.
   std::ifstream kf(config_.keyfile_);
   if (!kf) {
     throw PK11Error(CKR_GENERAL_ERROR,

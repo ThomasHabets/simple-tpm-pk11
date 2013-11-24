@@ -34,6 +34,9 @@ BYTE key_secret[] = {
 
 // Jumpgate to tscall()
 #define TSCALL(x, ...) tscall(#x, [&]()->TSS_RESULT{return x(__VA_ARGS__);})
+
+// Wrap Tspi_* calls, checking return value and throwing exception.
+// TODO: Adding debug logging.
 TSS_RESULT
 tscall(const std::string& name, std::function<TSS_RESULT()> func)
 {
@@ -58,7 +61,6 @@ xctime()
   return buf;
 }
 
-
 std::string
 parseError(int code)
 {
@@ -75,18 +77,17 @@ parseError(int code)
 
 Key
 generate_key() {
+  // === Set up context ===
   TSS_HCONTEXT ctx;
   TSCALL(Tspi_Context_Create, &ctx);
   TSCALL(Tspi_Context_Connect, ctx, NULL);
 
-  TSS_HPOLICY policy_default;
-  TSCALL(Tspi_Context_GetDefaultPolicy, ctx, &policy_default);
-
-  TSS_HTPM hTPM = 0;
+  // === Load TPM ===
+  TSS_HTPM hTPM;
   TSCALL(Tspi_Context_GetTpmObject, ctx, &hTPM);
 
-  // === SRK ===
-  TSS_HKEY srk = 0;
+  // === Load SRK ===
+  TSS_HKEY srk;
   TSCALL(Tspi_Context_CreateObject, ctx,
          TSS_OBJECT_TYPE_RSAKEY, TSS_KEY_TSP_SRK, &srk);
 
@@ -106,7 +107,7 @@ generate_key() {
 
   TSCALL(Tspi_Policy_AssignToObject, srk_policy, srk);
 
-  // === Key operation ===
+  // === Set up key object ===
   int init_flags = 
     TSS_KEY_TYPE_SIGNING
     | TSS_KEY_SIZE_2048
@@ -131,7 +132,7 @@ generate_key() {
          TSS_TSPATTRIB_KEYINFO_SIGSCHEME,
          TSS_SS_RSASSAPKCS1V15_DER);
 
-  // === Create Key
+  // === Create Key ===
   TSCALL(Tspi_Key_CreateKey, key, srk, 0);
 
   Key ret;
@@ -141,7 +142,7 @@ generate_key() {
   TSCALL(Tspi_GetAttribData, key,
          TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_MODULUS,
          &mod_size, &mod_blob);
-  printf("Mod: %d %p\n", mod_size, mod_blob);
+  std::clog << "Modulus size: " << mod_size << std::endl;
   ret.modulus = std::string(std::string(mod_blob, mod_blob+mod_size));
 
   // Get exponent.
@@ -150,7 +151,7 @@ generate_key() {
   TSCALL(Tspi_GetAttribData, key,
          TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_EXPONENT,
          &exp_size, &exp_blob);
-  printf("Exp: %d %p\n", exp_size, exp_blob);
+  std::clog << "Exponent size: " << exp_size << std::endl;
   ret.exponent = std::string{std::string(exp_blob, exp_blob+exp_size)};
 
   // Get keysize.
@@ -158,7 +159,7 @@ generate_key() {
   TSCALL(Tspi_GetAttribUint32, key,
          TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_KEYSIZE,
          &size);
-  printf("Size: %d\n", size);
+  std::clog << "Size: " << size << std::endl;
   
   // Get keyblob.
   UINT32 blob_size;
@@ -166,6 +167,7 @@ generate_key() {
   TSCALL(Tspi_GetAttribData, key,
          TSS_TSPATTRIB_KEY_BLOB, TSS_TSPATTRIB_KEYBLOB_BLOB,
          &blob_size, &blob_blob);
+  std::clog << "Blob size: " << blob_size << std::endl;
   ret.blob = std::string{std::string(blob_blob, blob_blob+blob_size)};
 
   // Cleanup
@@ -250,9 +252,6 @@ sign(const Key& key, const std::string& data)
   TSCALL(Tspi_Context_Create, &ctx);
   TSCALL(Tspi_Context_Connect, ctx, NULL);
 
-  TSS_HPOLICY policy_default;
-  TSCALL(Tspi_Context_GetDefaultPolicy, ctx, &policy_default);
-
   // === TPM ===
   TSS_HTPM tpm;
   TSCALL(Tspi_Context_GetTpmObject, ctx, &tpm);
@@ -307,6 +306,11 @@ sign(const Key& key, const std::string& data)
   }
   TSCALL(Tspi_Hash_Sign, hash, sign, &sig_size, &sig_blob);
   const std::string ret{sig_blob, sig_blob+sig_size};
+
+  // === Cleanup ===
+  // TODO; confirm that this cleans up everything.
+  Tspi_Context_FreeMemory(ctx, NULL);
+  Tspi_Context_Close(ctx);
   return ret;
 }
 END_NAMESPACE(stpm);

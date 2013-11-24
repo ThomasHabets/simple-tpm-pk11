@@ -1,15 +1,15 @@
+#include<memory>
 #include<stdexcept>
 #include<string>
-#include<memory>
 
 #include<opencryptoki/pkcs11.h>
 
 class PK11Error: public std::exception {
  public:
   PK11Error(int code): code(code), msg(get_msg()) {}
-  PK11Error(int code, const std::string&msg)
-  :code(code),
-   msg(get_msg() + ": " + msg)
+  PK11Error(int code, const std::string& msg)
+    :code(code),
+     msg(get_msg() + ": " + msg)
   {
   }
   virtual ~PK11Error() throw() {}
@@ -39,7 +39,10 @@ public:
   Session(const Config&);
 
   void FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters);
+
+  // Find a couple of objects. Returns number of objects supplied.
   int FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj);
+
   void GetAttributeValue(CK_OBJECT_HANDLE hObject,
                          CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount);
 
