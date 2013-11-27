@@ -5,6 +5,9 @@ A simple library for using the TPM chip to secure SSH keys.
 Copyright 2013 Google Inc. All Rights Reserved.
 Apache 2.0 license.
 
+This is NOT a Google product.
+
+
 Install dependencies
 ====================
 apt-get install tpm-tools libtspi-dev libopencryptoki-dev
