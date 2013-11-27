@@ -1,0 +1,37 @@
+Problem:
+  tpm_clear --force
+  [...] TPM is disabled
+Solution:
+  Go into BIOS and enable the TPM chip.
+
+Problem:
+  tpm_clear --force
+  TPM Successfully Cleared. You need to reboot to complete this operation.
+  After reboot the TPM will be in the default state: unowned,
+  disabled and inactive.
+Solution:
+  Reboot.
+
+Problem
+  tpm_clear --force
+  [...] Bad physical presence value
+Solution
+
+Problem
+  stpm-keygen -o my.key
+  [...] TPM is defending against dictionary attacks and is in some time-out period
+Solution
+  tpm_resetdalock
+
+Problem
+  One of the solutions assumes I know the owner password, and I don't.
+Solution
+  1) Shut off the machine. Reboot will not do. Power it down.
+  2) Boot the machine and enter the BIOS.
+  3) In the BIOS, find "Clear TPM chip" and run that.
+  4) Boot the OS and start from scratch with tpm_takeownership.
+
+Problem
+  Key not found in persistent storage.
+Solution
+  Did you reboot after clearing/taking ownership? Try that first.

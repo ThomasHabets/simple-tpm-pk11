@@ -1,10 +1,11 @@
-Init TPM chip
-=============
-1) If you have not taken ownership, do so.
-tpm_takeownership -z
+Simple TPM PK11
 
-2) SRK password must for now be Well Known Secret. If it's not, set it:
-tpm_changeownerauth -s -r
+A simple library for using the TPM chip to secure SSH keys.
+
+
+Install dependencies
+====================
+apt-get install tpm-tools libtspi-dev libopencryptoki-dev
 
 
 Build simple-tpm-pk11
@@ -12,13 +13,25 @@ Build simple-tpm-pk11
 ./configure && make && sudo make install
 
 
+Init TPM chip
+=============
+1) If you have not taken ownership, do so.
+tpm_takeownership -z
+Enter owner password: [enter something secret here]
+Confirm password: [enter something secret here]
+
+2) SRK password must for now be Well Known Secret. If it's not, set it:
+tpm_changeownerauth -s -r
+
+If you get any error messages, see read TPM-TROUBLESHOOTING.
+
 User setup
 ==========
 
 1) Create key
 -------------
 mkdir ~/.simple-tpm-pk11/
-stpm-keygen -f ~/.simple-tpm-pk11/my.key
+tpm-keygen -f ~/.simple-tpm-pk11/my.key
 
 Try the key out:
   dd if=/dev/urandom of=to-sign bs=1 count=35
@@ -50,6 +63,18 @@ then try:
   ssh shell.example.com
 
 
+Tested with
+===========
+
+Machines
+--------
+Lenovo T410 / STM TPM 1.2.8.16
+
+Software
+--------
+OpenSSH 6.0p1 on Debian 7.2
+
+
 Other notes, to be put in manpages
 ==================================
 * Setting SIMPLE_TPM_PK11_DEBUG env enables more verbose logging.
@@ -58,12 +83,14 @@ Other notes, to be put in manpages
 
 TODO
 ====
-* Clean up code
-* Key importing
-* Authorized keys, both SRK and the keys.
-* config option: log to stdout and/or stderr in addition to logfile
+* Clean up code.
+* Key importing.
+* Write manpages.
+* Authorized keys (key PINs), both SRK and the keys.
+* config option: log to stdout and/or stderr in addition to logfile.
 * override config location with env.
 * Install in the correct place.
+* Add PKCS11 support to ssh *server*.
 
 
 Reference links
@@ -75,6 +102,7 @@ http://www.trustedcomputinggroup.org/resources/tcg_software_stack_tss_specificat
 http://www.infineon.com/dgdl/TPM+Key+Backup+and+Recovery.pdf
 http://www.engadget.com/2010/02/12/christopher-tarnovsky-hacks-infineons-unhackable-chip-we-pre/
 http://trousers.sourceforge.net/dev_faq.html
+http://resources.infosecinstitute.com/linux-tpm-encryption-initializing-and-using-the-tpm/
 
 
 Some random notes, not instructions

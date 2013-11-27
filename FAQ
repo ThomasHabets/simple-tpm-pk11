@@ -1,0 +1,6 @@
+Q: Will this work on Macs?
+A: No. Macs do not have TPM chips. Please complain to your Apple dealer.
+---
+Q: Should I generate keys on the TPM chip, or import software generated keys?
+A: Generate on the TPM chip. See:
+http://blog.habets.se/2013/11/Should-I-generate-my-keys-in-software-or-hardware
