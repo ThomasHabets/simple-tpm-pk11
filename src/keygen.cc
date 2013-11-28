@@ -25,7 +25,7 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: keygen [ -h ] -o <output file>\n";
+  std::cout << "Usage: keygen [ -hsp ] -o <output file>\n";
   return rc;
 }
 END_NAMESPACE();
@@ -35,10 +35,19 @@ wrapped_main(int argc, char **argv)
 {
   int c;
   std::string output;
-  while (EOF != (c = getopt(argc, argv, "ho:"))) {
+  bool set_srk_pin{false};
+  bool set_key_pin{false};
+
+  while (EOF != (c = getopt(argc, argv, "ho:sp"))) {
     switch (c) {
     case 'h':
       return usage(0);
+    case 's':
+      set_srk_pin = true;
+      break;
+    case 'p':
+      set_key_pin = true;
+      break;
     case 'o':
       output = optarg;
       break;
@@ -50,7 +59,23 @@ wrapped_main(int argc, char **argv)
     std::cerr << "stpm-keygen: Empty output file name." << std::endl;
     return usage(1);
   }
-  auto key = stpm::generate_key();
+
+  std::string srk_pin;
+  if (set_srk_pin) {
+    // TODO: read from terminal without echo.
+    std::cerr << "Enter SRK PIN: " << std::flush;
+    getline(std::cin, srk_pin);
+  }
+
+  std::string key_pin;
+  if (set_key_pin) {
+    // TODO: read from terminal without echo.
+    std::cerr << "Enter key PIN: " << std::flush;
+    getline(std::cin, key_pin);
+  }
+
+  auto key = stpm::generate_key(set_srk_pin ? &srk_pin : NULL,
+                                set_key_pin ? &key_pin : NULL);
   std::ofstream fo(output);
   if (!fo) {
     std::cerr << "Unable to open '" << output << "'" << std::endl;

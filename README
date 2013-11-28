@@ -36,7 +36,7 @@ User setup
 1) Create key
 -------------
 mkdir ~/.simple-tpm-pk11/
-tpm-keygen -f ~/.simple-tpm-pk11/my.key
+stpm-keygen -f ~/.simple-tpm-pk11/my.key
 
 Try the key out:
   dd if=/dev/urandom of=to-sign bs=1 count=35
@@ -91,7 +91,6 @@ TODO
 * Clean up code.
 * Key importing.
 * Write manpages.
-* Authorized keys (key PINs), both SRK and the keys.
 * config option: log to stdout and/or stderr in addition to logfile.
 * override config location with env.
 * Install in the correct place.

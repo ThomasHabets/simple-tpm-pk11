@@ -57,6 +57,8 @@ PK11Error::get_msg() const
 Config::Config(const std::string& fn)
   :configfile_(fn),
    logfile_(new std::ofstream),
+   set_srk_pin_(false),
+   set_key_pin_(false),
    debug_(false)
 
 {
@@ -92,6 +94,12 @@ Config::read_file(std::ifstream& f)
       keyfile_ = xdirname(configfile_) + rest;
     } else if (cmd == "log") {
       logfilename_ = xdirname(configfile_) + rest;
+    } else if (cmd == "key_pin") {
+      key_pin_ = rest;
+      set_key_pin_ = true;
+    } else if (cmd == "srk_pin") {
+      srk_pin_ = rest;
+      set_srk_pin_ = true;
     } else if (cmd == "debug") {
       debug_ = true;
     } else {
@@ -197,7 +205,10 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
                         std::istreambuf_iterator<char>()};
   const stpm::Key key = stpm::parse_keyfile(kfs);
   const std::string data{pData, pData+usDataLen};
-  const std::string signature{stpm::sign(key, data)};
+  const std::string signature{
+    stpm::sign(key, data,
+               config_.set_srk_pin_ ? &config_.srk_pin_ : NULL,
+               config_.set_key_pin_ ? &config_.key_pin_ : NULL)};
   *pusSignatureLen = signature.size();
   memcpy(pSignature, signature.data(), signature.size());
 

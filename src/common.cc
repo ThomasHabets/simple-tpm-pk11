@@ -40,12 +40,6 @@ std::ostream& operator<<(std::ostream& o, struct stpm::Key& key)
 BEGIN_NAMESPACE(stpm);
 
 BEGIN_NAMESPACE();
-// TODO: Make key secret dynamic.
-BYTE key_secret[] = {
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-};
-
 
 // Jumpgate to tscall()
 #define TSCALL(x, ...) tscall(#x, [&]()->TSS_RESULT{return x(__VA_ARGS__);})
@@ -91,7 +85,7 @@ parseError(int code)
 }
 
 Key
-generate_key() {
+generate_key(const std::string* srk_pin, const std::string* key_pin) {
   // === Set up context ===
   TSS_HCONTEXT ctx;
   TSCALL(Tspi_Context_Create, &ctx);
@@ -114,11 +108,17 @@ generate_key() {
   TSCALL(Tspi_Context_CreateObject, ctx,
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &srk_policy);
 
-  // TODO: support non-WKS SRK passwords.
-  BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-  int wks_size = sizeof(wks);
-  TSCALL(Tspi_Policy_SetSecret, srk_policy,
-         TSS_SECRET_MODE_SHA1, wks_size, wks);
+  if (srk_pin) {
+    TSCALL(Tspi_Policy_SetSecret, srk_policy,
+           TSS_SECRET_MODE_PLAIN,
+           srk_pin->size(),
+           (BYTE*)srk_pin->data());
+  } else {
+    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
+    int wks_size = sizeof(wks);
+    TSCALL(Tspi_Policy_SetSecret, srk_policy,
+           TSS_SECRET_MODE_SHA1, wks_size, wks);
+  }
 
   TSCALL(Tspi_Policy_AssignToObject, srk_policy, srk);
 
@@ -137,8 +137,17 @@ generate_key() {
   TSCALL(Tspi_Context_CreateObject, ctx,
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &key_policy);
 
-  TSCALL(Tspi_Policy_SetSecret, key_policy,
-         TSS_SECRET_MODE_SHA1, sizeof(key_secret), key_secret);
+  if (key_pin) {
+    TSCALL(Tspi_Policy_SetSecret, key_policy,
+           TSS_SECRET_MODE_PLAIN,
+           key_pin->size(),
+           (BYTE*)key_pin->data());
+  } else {
+    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
+    int wks_size = sizeof(wks);
+    TSCALL(Tspi_Policy_SetSecret, key_policy,
+           TSS_SECRET_MODE_SHA1, wks_size, wks);
+  }
   TSCALL(Tspi_Policy_AssignToObject, key_policy, key);
 
   // Need to set DER mode for signing.
@@ -257,11 +266,10 @@ parse_keyfile(const std::string &s)
 }
 
 std::string
-sign(const Key& key, const std::string& data)
+sign(const Key& key, const std::string& data,
+     const std::string* srk_pin,
+     const std::string* key_pin)
 {
-  BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-  UINT32 wks_size = sizeof(wks);
-
   // === Context ===
   TSS_HCONTEXT ctx;
   TSCALL(Tspi_Context_Create, &ctx);
@@ -282,8 +290,17 @@ sign(const Key& key, const std::string& data)
   TSS_HPOLICY policy_srk;
   TSCALL(Tspi_Context_CreateObject, ctx,
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &policy_srk);
-  TSCALL(Tspi_Policy_SetSecret, policy_srk, TSS_SECRET_MODE_SHA1,
-         wks_size, wks);
+  if (srk_pin) {
+    TSCALL(Tspi_Policy_SetSecret, policy_srk,
+           TSS_SECRET_MODE_PLAIN,
+           srk_pin->size(),
+           (BYTE*)srk_pin->data());
+  } else {
+    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
+    int wks_size = sizeof(wks);
+    TSCALL(Tspi_Policy_SetSecret, policy_srk,
+           TSS_SECRET_MODE_SHA1, wks_size, wks);
+  }
   TSCALL(Tspi_Policy_AssignToObject, policy_srk, srk);
 
   // === Load key ===
@@ -303,8 +320,17 @@ sign(const Key& key, const std::string& data)
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE,
          &policy_sign);
 
-  TSCALL(Tspi_Policy_SetSecret, policy_sign, TSS_SECRET_MODE_SHA1,
-         sizeof(key_secret), key_secret);
+  if (key_pin) {
+    TSCALL(Tspi_Policy_SetSecret, policy_sign,
+           TSS_SECRET_MODE_PLAIN,
+           key_pin->size(),
+           (BYTE*)key_pin->data());
+  } else {
+    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
+    int wks_size = sizeof(wks);
+    TSCALL(Tspi_Policy_SetSecret, policy_sign,
+           TSS_SECRET_MODE_SHA1, wks_size, wks);
+  }
   TSCALL(Tspi_Policy_AssignToObject, policy_sign, sign);
         
   // === Sign ===

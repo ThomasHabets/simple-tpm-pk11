@@ -43,10 +43,14 @@ std::string to_hex(const std::string&);
 Key parse_keyfile(const std::string&);
 
 // Generate a signing key inside the TPM.
-Key generate_key();
+// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+Key generate_key(const std::string* srk_pin, const std::string* key_pin);
 
 // Sign plain data.
-std::string sign(const Key& key, const std::string& data);
+// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+std::string sign(const Key& key, const std::string& data,
+                 const std::string* srk_pin,
+                 const std::string* key_pin);
 
 std::string xctime();
 
@@ -54,8 +58,6 @@ std::string xctime();
 
 // Pretty-print keys.
 std::ostream& operator<<(std::ostream&, struct stpm::Key&);
-
-
 
 /* ---- Emacs Variables ----
  * Local Variables:

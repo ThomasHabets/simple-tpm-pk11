@@ -43,6 +43,11 @@ class Config {
   std::string keyfile_;
   std::string logfilename_;
   std::shared_ptr<std::ofstream> logfile_;
+
+  bool set_srk_pin_;
+  bool set_key_pin_;
+  std::string srk_pin_;
+  std::string key_pin_;
   bool debug_;
 
  private:

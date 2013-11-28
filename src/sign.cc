@@ -42,12 +42,20 @@ wrapped_main(int argc, char **argv)
   int c;
   std::string keyfile;
   std::string signfile;
-  while (EOF != (c = getopt(argc, argv, "hk:f:"))) {
+  bool set_srk_pin{false};
+  bool set_key_pin{false};
+  while (EOF != (c = getopt(argc, argv, "hk:f:ps"))) {
     switch (c) {
     case 'h':
       return usage(0);
     case 'k':
       keyfile = optarg;
+      break;
+    case 's':
+      set_srk_pin = true;
+      break;
+    case 'p':
+      set_key_pin = true;
       break;
     case 'f':
       signfile = optarg;
@@ -76,9 +84,24 @@ wrapped_main(int argc, char **argv)
   std::string sfs{std::istreambuf_iterator<char>(sf),
                   std::istreambuf_iterator<char>()};
   auto key = stpm::parse_keyfile(kfs);
+  std::string srk_pin;
+  if (set_srk_pin) {
+    // TODO: read from terminal without echo.
+    std::cerr << "Enter SRK PIN: " << std::flush;
+    getline(std::cin, srk_pin);
+  }
+
+  std::string key_pin;
+  if (set_key_pin) {
+    // TODO: read from terminal without echo.
+    std::cerr << "Enter key PIN: " << std::flush;
+    getline(std::cin, key_pin);
+  }
   std::cout << "Loaded key: " << key << std::endl
             << "=== Signature ===\n"
-            << stpm::to_hex(sign(key, sfs)) << std::endl;
+            << stpm::to_hex(sign(key, sfs,
+                                 set_srk_pin ? &srk_pin : NULL,
+                                 set_key_pin ? &key_pin : NULL)) << std::endl;
   return 0;
 }
 /* ---- Emacs Variables ----
