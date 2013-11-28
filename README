@@ -74,10 +74,12 @@ Tested with
 Machines
 --------
 Lenovo T410 / STM TPM 1.2.8.16
+Dell Precision T3500 / WEC TPM 1.2.2.81
 
 Software
 --------
 OpenSSH 6.0p1 on Debian 7.2
+OpenSSH 5.9
 
 
 Other notes, to be put in manpages
