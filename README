@@ -103,6 +103,12 @@ TODO
 * override config location with env.
 * Install in the correct place.
 * Add PKCS11 support to ssh *server*.
+* Make it work with gpg, and document.
+* Make it work with SSH certs, and document.
+* Make it work with openssl, and document.
+* Make it work with Firefox, and document.
+* Make it work with Chrome, and document.
+* Make it work with encrypted home directories, and document.
 
 
 Reference links
@@ -115,6 +121,7 @@ http://www.infineon.com/dgdl/TPM+Key+Backup+and+Recovery.pdf
 http://www.engadget.com/2010/02/12/christopher-tarnovsky-hacks-infineons-unhackable-chip-we-pre/
 http://trousers.sourceforge.net/dev_faq.html
 http://resources.infosecinstitute.com/linux-tpm-encryption-initializing-and-using-the-tpm/
+http://p11-glue.freedesktop.org/p11-kit.html
 
 
 Some random notes, not instructions
