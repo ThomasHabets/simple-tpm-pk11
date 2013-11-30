@@ -7,6 +7,8 @@ Apache 2.0 license.
 
 This is NOT a Google product.
 
+Contact: thomas@habets.se / habets@google.com
+
 
 Install dependencies
 ====================
@@ -25,7 +27,11 @@ tpm_takeownership -z
 Enter owner password: [enter something secret here]
 Confirm password: [enter something secret here]
 
-2) SRK password must for now be Well Known Secret. If it's not, set it:
+2) SRK password is usually the Well Known Secret (all nulls). You can
+specify a password but it's easier it you don't. The SRK password is only
+used to allow crypto operations. You still need blobs and key passwords to
+use other peoples keys.
+
 tpm_changeownerauth -s -r
 
 If you get any error messages, see read TPM-TROUBLESHOOTING.
@@ -51,18 +57,18 @@ Optionally add "log foo.log" in there too.
 
 3) Extract the public key in SSH format
 ---------------------------------------
-ssh-keygen -D /usr/local/lib/libsimple-tpm-pk11.so.0.0.0
+ssh-keygen -D /usr/local/lib/libsimple-tpm-pk11.so
 
 Install it where you want to log in, in the usual authorized_keys way.
 
 Try logging in using your new fancy key:
-  ssh -I /usr/local/lib/libsimple-tpm-pk11.so.0.0.0 shell.example.com
+  ssh -I /usr/local/lib/libsimple-tpm-pk11.so shell.example.com
 
 4) Configure SSH to always use this module
 ------------------------------------------
 Add this to ~/.ssh/config:
     Host *
-          PKCS11Provider /usr/local/lib/libsimple-tpm-pk11.so.0.0.0
+          PKCS11Provider /usr/local/lib/libsimple-tpm-pk11.so
 
 then try:
   ssh shell.example.com
@@ -98,6 +104,12 @@ TODO
 * override config location with env.
 * Install in the correct place.
 * Add PKCS11 support to ssh *server*.
+* Make it work with gpg, and document.
+* Make it work with SSH certs, and document.
+* Make it work with openssl, and document.
+* Make it work with Firefox, and document.
+* Make it work with Chrome, and document.
+* Make it work with encrypted home directories, and document.
 
 
 Reference links
@@ -110,6 +122,7 @@ http://www.infineon.com/dgdl/TPM+Key+Backup+and+Recovery.pdf
 http://www.engadget.com/2010/02/12/christopher-tarnovsky-hacks-infineons-unhackable-chip-we-pre/
 http://trousers.sourceforge.net/dev_faq.html
 http://resources.infosecinstitute.com/linux-tpm-encryption-initializing-and-using-the-tpm/
+http://p11-glue.freedesktop.org/p11-kit.html
 
 
 Some random notes, not instructions
