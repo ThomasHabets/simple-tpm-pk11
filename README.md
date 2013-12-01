@@ -55,7 +55,8 @@ stpm-keygen -f ~/.simple-tpm-pk11/my.key
 
 Try out the key:
 ```
-dd if=/dev/urandom of=to-sign bs=1 count=35 stpm-sign -k ~/.simple-tpm-pk11/my.key -f to-sign
+dd if=/dev/urandom of=to-sign bs=1 count=35
+stpm-sign -k ~/.simple-tpm-pk11/my.key -f to-sign
 ```
 
 ### 2. Create config
