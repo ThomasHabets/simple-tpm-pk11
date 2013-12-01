@@ -166,8 +166,9 @@ C_Login(CK_SESSION_HANDLE hSession,
         CK_USER_TYPE userType, CK_CHAR_PTR pPin,
         CK_ULONG usPinLen)
 {
-  log_debug("Login()");
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{
+      sessions[hSession].Login(userType, std::string{pPin,pPin+usPinLen});
+  });
 }
 
 CK_RV
@@ -182,12 +183,27 @@ CK_RV
 C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 {
   // TODO: fill these out from token.
-  strcpy((char*)pInfo->label, "token label");
+  strcpy((char*)pInfo->label, "Simple-TPM-PK11 token");
   strcpy((char*)pInfo->manufacturerID, "manuf id");
   strcpy((char*)pInfo->model, "model");
   strcpy((char*)pInfo->serialNumber, "serial");
 
-  //pInfo->flags
+  pInfo->flags = 0;
+  auto config = get_config();
+
+  std::ifstream kf{config.keyfile_};
+  if (!kf) {
+    throw PK11Error(CKR_GENERAL_ERROR,
+                    "Failed to open key file '" + config.keyfile_ + "'");
+  }
+  const std::string kfs{std::istreambuf_iterator<char>(kf),
+                        std::istreambuf_iterator<char>()};
+  const stpm::Key key = stpm::parse_keyfile(kfs);
+
+  if (stpm::auth_required(config.set_srk_pin_ ? &config.srk_pin_ : NULL,
+                          key)) {
+    pInfo->flags |= CKF_LOGIN_REQUIRED;
+  }
   pInfo->ulMaxSessionCount = 1000;
   pInfo->ulSessionCount = 0;
   pInfo->ulMaxRwSessionCount = 1000;

@@ -31,7 +31,7 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: sign [ -hps ] -k <keyfile> -f <data>" << std::endl;
+  std::cout << "Usage: sign [ -hs ] -k <keyfile> -f <data>" << std::endl;
   return rc;
 }
 END_NAMESPACE();
@@ -44,7 +44,7 @@ wrapped_main(int argc, char **argv)
   std::string signfile;
   bool set_srk_pin{false};
   bool set_key_pin{false};
-  while (EOF != (c = getopt(argc, argv, "hk:f:ps"))) {
+  while (EOF != (c = getopt(argc, argv, "hk:f:s"))) {
     switch (c) {
     case 'h':
       return usage(0);
@@ -53,9 +53,6 @@ wrapped_main(int argc, char **argv)
       break;
     case 's':
       set_srk_pin = true;
-      break;
-    case 'p':
-      set_key_pin = true;
       break;
     case 'f':
       signfile = optarg;
@@ -89,6 +86,11 @@ wrapped_main(int argc, char **argv)
     // TODO: read from terminal without echo.
     std::cerr << "Enter SRK PIN: " << std::flush;
     getline(std::cin, srk_pin);
+  }
+
+  if (stpm::auth_required(set_srk_pin ? &srk_pin : NULL,
+                          key)) {
+    set_key_pin = true;
   }
 
   std::string key_pin;

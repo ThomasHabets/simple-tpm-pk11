@@ -64,6 +64,9 @@ std::string sign(const Key& key, const std::string& data,
                  const std::string* srk_pin,
                  const std::string* key_pin);
 
+// Return true if key is password protected.
+bool auth_required(const std::string* srk_pin, const Key& key);
+
 std::string xctime();
 }  // namespace stpm
 

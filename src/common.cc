@@ -274,6 +274,31 @@ parse_keyfile(const std::string &s)
   return key;
 }
 
+bool
+auth_required(const std::string* srk_pin, const Key& key)
+{
+  TPMStuff stuff{srk_pin};
+
+  int init_flags =
+    TSS_KEY_TYPE_SIGNING
+    | TSS_KEY_SIZE_2048
+    | TSS_KEY_VOLATILE
+    | TSS_KEY_NO_AUTHORIZATION
+    | TSS_KEY_NOT_MIGRATABLE;
+
+  TSS_HKEY hkey;
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(), TSS_OBJECT_TYPE_RSAKEY,
+         init_flags, &hkey);
+  TSCALL(Tspi_Context_LoadKeyByBlob, stuff.ctx(), stuff.srk(),
+         key.blob.size(), (BYTE*)key.blob.data(), &hkey);
+
+  UINT32 auth;
+  TSCALL(Tspi_GetAttribUint32, hkey,
+         TSS_TSPATTRIB_KEY_INFO, TSS_TSPATTRIB_KEYINFO_AUTHDATAUSAGE,
+         &auth);
+  return !!auth;
+}
+
 std::string
 sign(const Key& key, const std::string& data,
      const std::string* srk_pin,
@@ -282,7 +307,7 @@ sign(const Key& key, const std::string& data,
   TPMStuff stuff{srk_pin};
 
   // === Load key ===
-  int init_flags = 
+  int init_flags =
     TSS_KEY_TYPE_SIGNING
     | TSS_KEY_SIZE_2048
     | TSS_KEY_VOLATILE

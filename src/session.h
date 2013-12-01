@@ -58,6 +58,7 @@ class Session {
 public:
   Session(const Config&);
 
+  void Login(CK_USER_TYPE type, const std::string& pin);
   void FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters);
 
   // Find a couple of objects. Returns number of objects supplied.
@@ -71,6 +72,7 @@ public:
             CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen);
 private:
   Config config_;
+  std::string pin_;
   int findpos_;
 };
 /* ---- Emacs Variables ----

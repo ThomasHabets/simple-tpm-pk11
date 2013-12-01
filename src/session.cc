@@ -115,6 +115,13 @@ Session::Session(const Config& config)
 }
 
 void
+Session::Login(CK_USER_TYPE type, const std::string& pin)
+{
+  config_.key_pin_ = pin;
+  config_.set_key_pin_ = true;
+}
+
+void
 Session::FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters)
 {
   findpos_ = 0;
