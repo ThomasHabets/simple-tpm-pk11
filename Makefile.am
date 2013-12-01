@@ -1,5 +1,7 @@
 ACLOCAL_AMFLAGS=-I m4
 
+SUBDIRS=doc
+
 bin_PROGRAMS=stpm-keygen stpm-sign
 TESTS=stpm-keygen_test stpm-sign_test
 check_PROGRAMS=$(TESTS)
@@ -51,3 +53,4 @@ mrproper: maintainer-clean
 	rm -f debian/substvars debian/files
 	rm -fr debian/tmp
 	rm -fr m4
+	rm -f doc/Makefile.in

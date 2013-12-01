@@ -1,0 +1,58 @@
+manpage(stpm-sign)(1)(1th December, 2013)(simple-tpm-pk11)()
+manpagename(stpm-sign)(Sign data using the TPM chip)
+
+manpagesynopsis()
+    bf(stpm-sign) [ -hs ] -k em(key file) -f em(input file)
+
+manpagedescription()
+    em(stpm-sign) takes the SRK-encrypted key blob and has the TPM sign the
+    contents of em(input file) using the key.
+
+    This program is mostly made for debugging, to make sure that the TPM
+    is set up correctly and a valid key was generated.
+
+manpageoptions()
+startdit()
+    dit(-h) Show usage info.
+    dit(-f em(input file)) File containing dato to be signed.
+    dit(-k) Key to sign with. The key is generated with em(stpm-keysign).
+    dit(-s) Ask for the SRK password interactively. By default the
+        "Well Known Secret" (20 nulls) is used. The SRK password is an
+        access token that must be presented for the TPM to perform any
+        operation that involves the TPM, and an actual secret password
+        is usually not required or useful.
+enddit()
+ 
+manpagesection(EXAMPLES)
+mancommand(.nf)
+mancommand(.sp)
+
+    stpm-sign -k ~/.simple-tpm-pk11/my.key -f my-data-here
+
+    stpm-sign -k ~/.simple-tpm-pk11/my-PIN-key.key -f my-data-here
+    Enter key PIN: my secret password here
+
+    stpm-sign -sk ~/.simple-tpm-pk11/my-PIN-key.key -f my-data-here
+    Enter SRK PIN: 12345678
+    Enter key PIN: my secret password here
+mancommand(.fi)
+mancommand(.in)
+
+manpagediagnostics()
+    Most errors will probably be related to interacting with the TPM chip.
+    Resetting the TPM chip and taking ownership should take care of most
+    of them. See the em(TPM-TROUBLESHOOTING) section of
+    bf(simple-tpm-pk11(7)).
+
+manpagebugs()
+    The password is read from stdin without turning off echo. It should be
+    read from the terminal without echo.
+
+manpageseealso()
+    bf(simple-tpm-pk11(7)), bf(stpm-keygen(1)).
+
+manpageauthor()
+    Simple-TPM-PK11 was written By Thomas Habets <habets@google.com>
+    / <thomas@habets.se>.
+
+    git clone https://github.com/ThomasHabets/simple-tpm-pk11.git

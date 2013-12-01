@@ -40,6 +40,7 @@ AC_PROG_LIBTOOL(libtool)
 CXXFLAGS="$CXXFLAGS -std=gnu++0x -Wall"
 
 AC_CONFIG_FILES([Makefile])
+AC_CONFIG_FILES([doc/Makefile])
 AC_OUTPUT
 
 echo "

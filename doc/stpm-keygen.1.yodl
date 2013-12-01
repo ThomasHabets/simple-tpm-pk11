@@ -1,0 +1,58 @@
+manpage(stpm-keygen)(1)(1th December, 2013)(simple-tpm-pk11)()
+manpagename(stpm-keygen)(Generate key pair for use with simple-tpm-pk11)
+
+manpagesynopsis()
+    bf(stpm-keygen) [ -hps ] -o em(output file)
+
+manpagedescription()
+    em(stpm-keygen) generates a 2048 RSA key inside the TPM chip, and saves
+    the public key and the SRK-encrypted private key (the "blob") in the
+    em(output file).
+
+manpageoptions()
+startdit()
+    dit(-h) Show usage info.
+    dit(-o em(output file)) Output file, where the public key and key blob
+        will be written.
+    dit(-p) Create the key with a PIN / password. The password will
+        be prompted for inteactively.
+    dit(-s) Ask for the SRK password interactively. By default the
+        "Well Known Secret" (20 nulls) is used. The SRK password is an
+        access token that must be presented for the TPM to perform any
+        operation that involves the TPM, and an actual secret password
+        is usually not required or useful.
+enddit()
+ 
+manpagesection(EXAMPLES)
+mancommand(.nf)
+mancommand(.sp)
+
+    stpm-keygen -o ~/.simple-tpm-pk11/my.key
+
+    stpm-keygen -p -o ~/.simple-tpm-pk11/my.key
+    Enter key PIN: my secret password here
+
+    stpm-keygen -sp -o ~/.simple-tpm-pk11/my.key
+    Enter SRK PIN: 12345678
+    Enter key PIN: my secret password here
+mancommand(.fi)
+mancommand(.in)
+
+manpagediagnostics()
+    Most errors will probably be related to interacting with the TPM chip.
+    Resetting the TPM chip and taking ownership should take care of most
+    of them. See the em(TPM-TROUBLESHOOTING) section of
+    bf(simple-tpm-pk11(7)).
+
+manpagebugs()
+    The password is read from stdin without turning off echo. It should be
+    read from the terminal without echo.
+
+manpageseealso()
+    bf(simple-tpm-pk11(7)), bf(stpm-sign(1)).
+
+manpageauthor()
+    Simple-TPM-PK11 was written By Thomas Habets <habets@google.com>
+    / <thomas@habets.se>.
+
+    git clone https://github.com/ThomasHabets/simple-tpm-pk11.git

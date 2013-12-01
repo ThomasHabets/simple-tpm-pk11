@@ -1,0 +1,62 @@
+.TH "stpm\-sign" "1" "1th December, 2013" "simple\-tpm\-pk11" ""
+.SH "NAME"
+stpm\-sign \- Sign data using the TPM chip
+.PP 
+.SH "SYNOPSIS"
+\fBstpm\-sign\fP [ \-hs ] \-k \fIkey file\fP \-f \fIinput file\fP
+.PP 
+.SH "DESCRIPTION"
+\fIstpm\-sign\fP takes the SRK\-encrypted key blob and has the TPM sign the
+contents of \fIinput file\fP using the key\&.
+.PP 
+This program is mostly made for debugging, to make sure that the TPM
+is set up correctly and a valid key was generated\&.
+.PP 
+.SH "OPTIONS"
+.IP "\-h"
+Show usage info\&.
+.IP "\-f \fIinput file\fP"
+File containing dato to be signed\&.
+.IP "\-k"
+Key to sign with\&. The key is generated with \fIstpm\-keysign\fP\&.
+.IP "\-s"
+Ask for the SRK password interactively\&. By default the
+\(dq\&Well Known Secret\(dq\& (20 nulls) is used\&. The SRK password is an
+access token that must be presented for the TPM to perform any
+operation that involves the TPM, and an actual secret password
+is usually not required or useful\&.
+
+.PP 
+.SH "EXAMPLES"
+.nf
+.sp
+.PP 
+stpm\-sign \-k ~/\&.simple\-tpm\-pk11/my\&.key \-f my\-data\-here
+.PP 
+stpm\-sign \-k ~/\&.simple\-tpm\-pk11/my\-PIN\-key\&.key \-f my\-data\-here
+Enter key PIN: my secret password here
+.PP 
+stpm\-sign \-sk ~/\&.simple\-tpm\-pk11/my\-PIN\-key\&.key \-f my\-data\-here
+Enter SRK PIN: 12345678
+Enter key PIN: my secret password here
+.fi
+.in
+.PP 
+.SH "DIAGNOSTICS"
+Most errors will probably be related to interacting with the TPM chip\&.
+Resetting the TPM chip and taking ownership should take care of most
+of them\&. See the \fITPM\-TROUBLESHOOTING\fP section of
+\fBsimple\-tpm\-pk11(7)\fP\&.
+.PP 
+.SH "BUGS"
+The password is read from stdin without turning off echo\&. It should be
+read from the terminal without echo\&.
+.PP 
+.SH "SEE ALSO"
+\fBsimple\-tpm\-pk11(7)\fP, \fBstpm\-keygen(1)\fP\&.
+.PP 
+.SH "AUTHOR"
+Simple\-TPM\-PK11 was written By Thomas Habets <habets@google\&.com>
+/ <thomas@habets\&.se>\&.
+.PP 
+git clone https://github\&.com/ThomasHabets/simple\-tpm\-pk11\&.git

@@ -1,0 +1,72 @@
+manpage(simple-tpm-pk11)(7)(1th December, 2013)(simple-tpm-pk11)()
+manpagename(simple-tpm-pk11)(Simple PKCS11 provider for TPM chips)
+
+manpagedescription()
+    em(simple-tpm-pk11) Is a PKCS11 provider for TPM chips. Its primary
+    purpose is to protect SSH client keys so that they can't be copied or
+    stolen if the machine they're on gets compromised.
+
+manpageoptions()
+    Since PKCS11 modules are .so files loaded by other binaries, they don't
+    take command line options. Instead em(simple-tpm-pk11) options can be
+    set up environment variables.
+startdit()
+    dit(SIMPLE_TPM_PK11_DEBUG)
+      If set, enables debug level logging.
+    dit(SIMPLE_TPM_PK11_CONFIG=/path/to/config)
+      Override default config location. Default is ~/.simple-tpm-pk11/config.
+      Not implemented yet.
+    dit(SIMPLE_TPM_PK11_LOG_STDERR)
+      If set, copies all log output to STDERR.
+      Not implemented yet.
+enddit()
+
+manpagesection(CONFIGURATION FILE)
+    Configuration options are of the key/value variety, with comments lines
+    starting with "#".
+startdit()
+    dit(key em(key file))
+      Full path to key file, or relative to ~/.simple-tpm-pk11.
+      This the only required configuration option.
+    dit(debug)
+      Enable debug level logging.
+    dit(srk_pin em(PIN))
+      Set SRK PIN. Default is the Well Known Secret (20 nulls).
+    dit(key_pin em(PIN))
+      Set key PIN.
+    dit(log em(log file))
+      Full path to log file, or relative to ~/.simple-tpm-pk11.
+enddit()
+
+manpagesection(EXAMPLES)
+mancommand(.nf)
+mancommand(.sp)
+    # Load key from ~/.simple-tpm-pk11/my.key.
+    key my.key
+
+    # Load key from /keys/foo/my.key, and the empty string as SRK PIN.
+    key /keys/foo/my.key
+    srk_pin
+mancommand(.fi)
+mancommand(.in)
+
+manpagesection(TPM-TROUBLESHOOTING)
+    TODO.
+
+manpagediagnostics()
+    Most errors will probably be related to interacting with the TPM chip.
+    Resetting the TPM chip and taking ownership should take care of most
+    of them. See the em(TPM-TROUBLESHOOTING) section.
+
+manpagebugs()
+    The password is read from stdin without turning off echo. It should be
+    read from the terminal without echo.
+
+manpageseealso()
+    bf(stpm-keygen(1)), bf(stpm-sign(1))
+
+manpageauthor()
+    Simple-TPM-PK11 was written By Thomas Habets <habets@google.com>
+    / <thomas@habets.se>.
+
+    git clone https://github.com/ThomasHabets/simple-tpm-pk11.git
