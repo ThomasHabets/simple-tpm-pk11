@@ -9,7 +9,23 @@ LT_INIT([dlopen])
 AC_CONFIG_SRCDIR([src/common.cc])
 AC_CONFIG_HEADER(config.h)
 
-AC_CHECK_LIB([tspi], [Tspi_GetAttribUint32])
+AC_CHECK_HEADERS([tss/tspi.h], [], [
+    [echo "Cannot continue:"]
+    [echo " libtspi headers are missing; please install the package providing tss/tspi.h,"]
+    [echo " which is libtspi-dev for Debian derivatives."]
+    [exit 1]
+])
+AC_CHECK_LIB([tspi], [Tspi_GetAttribUint32], [], [
+    [echo "Cannot continue:"]
+    [echo " libtspi is missing the required function Tspi_GetAttribUint32."]
+    [exit 1]
+])
+AC_CHECK_HEADERS([opencryptoki/pkcs11.h], [], [
+    [echo "Cannot continue:"]
+    [echo " opencryptoki headers are missing; please install the package providing"]
+    [echo " opencryptoki/pkcs11.h, which is libopencryptoki-dev for Debian derivatives."]
+    [exit 1]
+])
 
 AC_PROG_CXX
 AC_PROG_INSTALL
