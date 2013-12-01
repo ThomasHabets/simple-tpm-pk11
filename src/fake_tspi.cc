@@ -37,7 +37,13 @@ Tspi_GetAttribUint32(TSS_HOBJECT hObject,
                      TSS_FLAG    subFlag,
                      UINT32*     pulAttrib)
 {
-  *pulAttrib = 123;
+  switch (subFlag) {
+  case TSS_TSPATTRIB_KEYINFO_AUTHDATAUSAGE:
+    *pulAttrib = 0;
+    break;
+  default:
+    *pulAttrib = 123;
+  }
   return TSS_SUCCESS;
 }
 

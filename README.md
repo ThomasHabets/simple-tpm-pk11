@@ -140,6 +140,7 @@ Reference links
 * http://trousers.sourceforge.net/dev_faq.html
 * http://resources.infosecinstitute.com/linux-tpm-encryption-initializing-and-using-the-tpm/
 * http://p11-glue.freedesktop.org/p11-kit.html
+* http://trousers.sourceforge.net/dev_faq.html
 
 
 Some random notes, not instructions
