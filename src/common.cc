@@ -137,8 +137,13 @@ generate_key(const std::string* srk_pin, const std::string* key_pin) {
     TSS_KEY_TYPE_SIGNING
     | TSS_KEY_SIZE_2048
     | TSS_KEY_VOLATILE
-    | TSS_KEY_NO_AUTHORIZATION
     | TSS_KEY_NOT_MIGRATABLE;
+
+  if (key_pin) {
+    init_flags |= TSS_KEY_AUTHORIZATION;
+  } else {
+    init_flags |= TSS_KEY_NO_AUTHORIZATION;
+  }
 
   TSS_HKEY key;
   TSCALL(Tspi_Context_CreateObject, stuff.ctx(),

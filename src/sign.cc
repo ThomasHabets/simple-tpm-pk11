@@ -31,7 +31,7 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: sign [ -h ] -k <keyfile> -f <data>" << std::endl;
+  std::cout << "Usage: sign [ -hps ] -k <keyfile> -f <data>" << std::endl;
   return rc;
 }
 END_NAMESPACE();
