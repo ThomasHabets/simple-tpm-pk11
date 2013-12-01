@@ -27,6 +27,7 @@
 #include"trousers/trousers.h"
 
 #include"common.h"
+#include"tspiwrap.h"
 #include"internal.h"
 
 std::ostream& operator<<(std::ostream& o, struct stpm::Key& key)
@@ -39,10 +40,7 @@ std::ostream& operator<<(std::ostream& o, struct stpm::Key& key)
 
 BEGIN_NAMESPACE(stpm);
 
-BEGIN_NAMESPACE();
-
-// Jumpgate to tscall()
-#define TSCALL(x, ...) tscall(#x, [&]()->TSS_RESULT{return x(__VA_ARGS__);})
+TSS_UUID srk_uuid = TSS_UUID_SRK;
 
 // Wrap Tspi_* calls, checking return value and throwing exception.
 // TODO: Adding debug logging.
@@ -55,7 +53,6 @@ tscall(const std::string& name, std::function<TSS_RESULT()> func)
   }
   return res;
 }
-END_NAMESPACE();
 
 std::string
 xctime()
@@ -84,43 +81,56 @@ parseError(int code)
   return ss.str();
 }
 
+// TODO: Complete this implementatino.
+Key
+wrap_key(const std::string* srk_pin, const std::string* key_pin,
+         const SoftwareKey& swkey)
+{
+  TPMStuff stuff{srk_pin};
+
+  // === Set up key object ===
+  int init_flags =
+    TSS_KEY_TYPE_SIGNING
+    | TSS_KEY_SIZE_2048
+    | TSS_KEY_VOLATILE
+    | TSS_KEY_NO_AUTHORIZATION
+    | TSS_KEY_NOT_MIGRATABLE;
+
+  TSS_HKEY key;
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
+         TSS_OBJECT_TYPE_RSAKEY, init_flags, &key);
+  TSS_HPOLICY key_policy;
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
+         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &key_policy);
+
+  // Set modulus
+  // TODO: Set modulus.
+
+  // set private
+  TSCALL(Tspi_SetAttribData, key, TSS_TSPATTRIB_KEY_BLOB,
+         TSS_TSPATTRIB_KEYBLOB_PRIVATE_KEY,
+         swkey.key.size(), (BYTE*)swkey.key.data());
+
+  // Create key
+  TSCALL(Tspi_Key_WrapKey, key, stuff.srk(), 0);
+
+  Key ret;
+  ret.modulus = swkey.modulus;
+  ret.exponent = swkey.exponent;
+
+  // Get keyblob.
+  UINT32 blob_size;
+  BYTE* blob_blob;
+  TSCALL(Tspi_GetAttribData, key,
+         TSS_TSPATTRIB_KEY_BLOB, TSS_TSPATTRIB_KEYBLOB_BLOB,
+         &blob_size, &blob_blob);
+  ret.blob = std::string{std::string(blob_blob, blob_blob+blob_size)};
+  return ret;
+}
+
 Key
 generate_key(const std::string* srk_pin, const std::string* key_pin) {
-  // === Set up context ===
-  TSS_HCONTEXT ctx;
-  TSCALL(Tspi_Context_Create, &ctx);
-  TSCALL(Tspi_Context_Connect, ctx, NULL);
-
-  // === Load TPM ===
-  TSS_HTPM hTPM;
-  TSCALL(Tspi_Context_GetTpmObject, ctx, &hTPM);
-
-  // === Load SRK ===
-  TSS_HKEY srk;
-  TSCALL(Tspi_Context_CreateObject, ctx,
-         TSS_OBJECT_TYPE_RSAKEY, TSS_KEY_TSP_SRK, &srk);
-
-  TSS_UUID uuid_srk = TSS_UUID_SRK;
-  TSCALL(Tspi_Context_LoadKeyByUUID, ctx,
-         TSS_PS_TYPE_SYSTEM, uuid_srk, &srk);
-
-  TSS_HKEY srk_policy;
-  TSCALL(Tspi_Context_CreateObject, ctx,
-         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &srk_policy);
-
-  if (srk_pin) {
-    TSCALL(Tspi_Policy_SetSecret, srk_policy,
-           TSS_SECRET_MODE_PLAIN,
-           srk_pin->size(),
-           (BYTE*)srk_pin->data());
-  } else {
-    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-    int wks_size = sizeof(wks);
-    TSCALL(Tspi_Policy_SetSecret, srk_policy,
-           TSS_SECRET_MODE_SHA1, wks_size, wks);
-  }
-
-  TSCALL(Tspi_Policy_AssignToObject, srk_policy, srk);
+  TPMStuff stuff{srk_pin};
 
   // === Set up key object ===
   int init_flags = 
@@ -131,10 +141,10 @@ generate_key(const std::string* srk_pin, const std::string* key_pin) {
     | TSS_KEY_NOT_MIGRATABLE;
 
   TSS_HKEY key;
-  TSCALL(Tspi_Context_CreateObject, ctx,
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
          TSS_OBJECT_TYPE_RSAKEY, init_flags, &key);
   TSS_HPOLICY key_policy;
-  TSCALL(Tspi_Context_CreateObject, ctx,
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &key_policy);
 
   if (key_pin) {
@@ -157,7 +167,7 @@ generate_key(const std::string* srk_pin, const std::string* key_pin) {
          TSS_SS_RSASSAPKCS1V15_DER);
 
   // === Create Key ===
-  TSCALL(Tspi_Key_CreateKey, key, srk, 0);
+  TSCALL(Tspi_Key_CreateKey, key, stuff.srk(), 0);
 
   Key ret;
   // Get modulus.
@@ -193,12 +203,6 @@ generate_key(const std::string* srk_pin, const std::string* key_pin) {
          &blob_size, &blob_blob);
   std::clog << "Blob size: " << blob_size << std::endl;
   ret.blob = std::string{std::string(blob_blob, blob_blob+blob_size)};
-
-  // Cleanup
-  // TODO; confirm that this cleans up everything.
-  //Tspi_Context_Close(h);
-  Tspi_Context_FreeMemory(ctx, NULL);
-  Tspi_Context_Close(ctx);
   return ret;
 }
 
@@ -270,38 +274,7 @@ sign(const Key& key, const std::string& data,
      const std::string* srk_pin,
      const std::string* key_pin)
 {
-  // === Context ===
-  TSS_HCONTEXT ctx;
-  TSCALL(Tspi_Context_Create, &ctx);
-  TSCALL(Tspi_Context_Connect, ctx, NULL);
-
-  // === TPM ===
-  TSS_HTPM tpm;
-  TSCALL(Tspi_Context_GetTpmObject, ctx, &tpm);
-
-  // === SRK ===
-  TSS_HKEY srk;
-  TSS_UUID uuid_srk = TSS_UUID_SRK;
-  TSCALL(Tspi_Context_CreateObject, ctx,
-         TSS_OBJECT_TYPE_RSAKEY, TSS_KEY_TSP_SRK, &srk);
-  TSCALL(Tspi_Context_LoadKeyByUUID, ctx,
-         TSS_PS_TYPE_SYSTEM, uuid_srk, &srk);
-
-  TSS_HPOLICY policy_srk;
-  TSCALL(Tspi_Context_CreateObject, ctx,
-         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &policy_srk);
-  if (srk_pin) {
-    TSCALL(Tspi_Policy_SetSecret, policy_srk,
-           TSS_SECRET_MODE_PLAIN,
-           srk_pin->size(),
-           (BYTE*)srk_pin->data());
-  } else {
-    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-    int wks_size = sizeof(wks);
-    TSCALL(Tspi_Policy_SetSecret, policy_srk,
-           TSS_SECRET_MODE_SHA1, wks_size, wks);
-  }
-  TSCALL(Tspi_Policy_AssignToObject, policy_srk, srk);
+  TPMStuff stuff{srk_pin};
 
   // === Load key ===
   int init_flags = 
@@ -312,11 +285,11 @@ sign(const Key& key, const std::string& data,
     | TSS_KEY_NOT_MIGRATABLE;
   TSS_HKEY sign;
   TSS_HPOLICY policy_sign;
-  TSCALL(Tspi_Context_CreateObject, ctx, TSS_OBJECT_TYPE_RSAKEY,
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(), TSS_OBJECT_TYPE_RSAKEY,
          init_flags, &sign);
-  TSCALL(Tspi_Context_LoadKeyByBlob, ctx, srk,
+  TSCALL(Tspi_Context_LoadKeyByBlob, stuff.ctx(), stuff.srk(),
          key.blob.size(), (BYTE*)key.blob.data(), &sign);
-  TSCALL(Tspi_Context_CreateObject, ctx,
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE,
          &policy_sign);
 
@@ -337,7 +310,7 @@ sign(const Key& key, const std::string& data,
   TSS_HHASH hash;
   UINT32 sig_size;
   BYTE* sig_blob;
-  TSCALL(Tspi_Context_CreateObject, ctx,
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
          TSS_OBJECT_TYPE_HASH, TSS_HASH_OTHER, &hash);
   TSCALL(Tspi_Hash_SetHashValue, hash, data.size(), (BYTE*)data.data());
   if (false) {
@@ -346,13 +319,7 @@ sign(const Key& key, const std::string& data,
            TSS_SS_RSASSAPKCS1V15_DER);
   }
   TSCALL(Tspi_Hash_Sign, hash, sign, &sig_size, &sig_blob);
-  const std::string ret{sig_blob, sig_blob+sig_size};
-
-  // === Cleanup ===
-  // TODO; confirm that this cleans up everything.
-  Tspi_Context_FreeMemory(ctx, NULL);
-  Tspi_Context_Close(ctx);
-  return ret;
+  return std::string{sig_blob, sig_blob+sig_size};
 }
 END_NAMESPACE(stpm);
 /* ---- Emacs Variables ----

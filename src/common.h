@@ -25,11 +25,18 @@ namespace stpm {
 }
 #endif
 
-// Key parts in binary.
+// TPM key parts in binary.
 struct Key {
         std::string exponent;  // Almost certainly 65537.
-        std::string modulus;   // 
-        std::string blob;      // Blob encrypted by SRK.
+        std::string modulus;   //
+        std::string blob;      // For HW keys, blob encrypted by SRK.
+};
+
+// Software key parts in binary.
+struct SoftwareKey {
+        std::string exponent;  // Almost certainly 65537.
+        std::string modulus;   //
+        std::string key;       // The private key.
 };
 
 
@@ -46,6 +53,11 @@ Key parse_keyfile(const std::string&);
 // If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
 Key generate_key(const std::string* srk_pin, const std::string* key_pin);
 
+// Generate a signing key inside the TPM.
+// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+Key wrap_key(const std::string* srk_pin, const std::string* key_pin,
+             const SoftwareKey& key);
+
 // Sign plain data.
 // If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
 std::string sign(const Key& key, const std::string& data,
@@ -53,12 +65,10 @@ std::string sign(const Key& key, const std::string& data,
                  const std::string* key_pin);
 
 std::string xctime();
-
 }  // namespace stpm
 
 // Pretty-print keys.
 std::ostream& operator<<(std::ostream&, struct stpm::Key&);
-
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 8

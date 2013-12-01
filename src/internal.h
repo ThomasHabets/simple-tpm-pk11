@@ -14,10 +14,22 @@
  * limitations under the License.
  */
 // Internal include to not pollute non-namespace parts.
+#include<functional>
+
+#include"tss/tspi.h"
 
 #define BEGIN_NAMESPACE(x) namespace x {
 #define END_NAMESPACE(x) }
 
+// Jumpgate to tscall()
+#define TSCALL(x, ...) tscall(#x, [&]()->TSS_RESULT{return x(__VA_ARGS__);})
+
+BEGIN_NAMESPACE(stpm);
+extern TSS_UUID srk_uuid;
+
+TSS_RESULT tscall(const std::string& name, std::function<TSS_RESULT()> func);
+
+END_NAMESPACE(stpm);
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 8

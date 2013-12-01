@@ -7,11 +7,13 @@ check_PROGRAMS=$(TESTS)
 stpm_keygen_SOURCES=\
 src/keygen.cc \
 src/common.cc \
+src/tspiwrap.cc \
 src/wrap_main.cc
 stpm_keygen_test_SOURCES=\
 src/keygen.cc \
 src/keygen_test.cc \
 src/common.cc \
+src/tspiwrap.cc \
 src/fake_tspi.cc \
 src/libgtest.cc
 stpm_keygen_test_CXXFLAGS=-I/usr/src/gtest
@@ -20,11 +22,13 @@ stpm_keygen_test_LDFLAGS=
 stpm_sign_SOURCES=\
 src/wrap_main.cc \
 src/common.cc \
+src/tspiwrap.cc \
 src/sign.cc
 stpm_sign_test_SOURCES=\
 src/sign.cc \
 src/sign_test.cc \
 src/common.cc \
+src/tspiwrap.cc \
 src/fake_tspi.cc \
 src/libgtest.cc
 stpm_sign_test_CXXFLAGS=-I/usr/src/gtest
@@ -36,6 +40,7 @@ libsimple_tpm_pk11_la_CXXFLAGS = $(AM_CXXFLAGS)
 libsimple_tpm_pk11_la_SOURCES=\
 src/pk11.cc \
 src/session.cc \
+src/tspiwrap.cc \
 src/common.cc
 libsimple_tpm_pk11_la_LDFLAGS=-version-info 0:0:0
 
