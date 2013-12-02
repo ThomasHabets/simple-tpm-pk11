@@ -1,0 +1,20 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set tmpdir "test-tmp"
+
+send_user "=== Generating key ===\n"
+spawn "./stpm-keygen" "-o" "$tmpdir/simple-key"
+expect "Modulus size: 256"
+expect "Exponent size: 3"
+expect "Size: 2048"
+expect "Blob size: 559"
+expect eof
+
+send_user "=== Signing with key ===\n"
+spawn "dd" "if=/dev/urandom" "of=$tmpdir/to-sign" "count=35" "bs=1"
+expect eof
+spawn "./stpm-sign" "-k" "$tmpdir/simple-key" "-f" "$tmpdir/to-sign"
+expect "Loaded key:"
+expect -- "--- Signature ---"
+expect eof

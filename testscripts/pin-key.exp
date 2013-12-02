@@ -1,0 +1,34 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set tmpdir "test-tmp"
+
+send_user "=== Generating key with PIN ===\n"
+spawn "./stpm-keygen" "-po" "$tmpdir/pin-key"
+expect "Enter key PIN: "
+send "12345678\r"
+expect "Modulus size: 256"
+expect "Exponent size: 3"
+expect "Size: 2048"
+expect "Blob size: 559"
+expect eof
+
+send_user "=== Signing with key with PIN ===\n"
+spawn "dd" "if=/dev/urandom" "of=$tmpdir/to-sign" "count=35" "bs=1"
+expect eof
+spawn "./stpm-sign" "-k" "$tmpdir/pin-key" "-f" "$tmpdir/to-sign"
+expect "Enter key PIN: "
+send "12345678\r"
+expect "Loaded key:"
+expect -- "--- Signature ---"
+expect eof
+
+send_user "=== Signing with key with wrong PIN ===\n"
+spawn "dd" "if=/dev/urandom" "of=$tmpdir/to-sign" "count=35" "bs=1"
+expect eof
+spawn "./stpm-sign" "-k" "$tmpdir/pin-key" "-f" "$tmpdir/to-sign"
+expect "Enter key PIN: "
+send "87654321\r"
+expect "Authentication failed"
+expect eof
+

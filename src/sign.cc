@@ -100,7 +100,7 @@ wrapped_main(int argc, char **argv)
     getline(std::cin, key_pin);
   }
   std::cout << "Loaded key: " << key << std::endl
-            << "=== Signature ===\n"
+            << "--- Signature ---\n"
             << stpm::to_hex(sign(key, sfs,
                                  set_srk_pin ? &srk_pin : NULL,
                                  set_key_pin ? &key_pin : NULL)) << std::endl;

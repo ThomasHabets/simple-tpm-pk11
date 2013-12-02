@@ -129,7 +129,7 @@ TEST(Sign, OK)
     NULL,
   };
   EXPECT_EQ(0, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
-  EXPECT_EQ("Loaded key: mod=010203,exp=010001,blob=010203040506\n=== Signature ===\n12345678\n", s.stdout());
+  EXPECT_EQ("Loaded key: mod=010203,exp=010001,blob=010203040506\n--- Signature ---\n12345678\n", s.stdout());
   EXPECT_EQ("", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }

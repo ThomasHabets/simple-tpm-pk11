@@ -46,6 +46,9 @@ src/tspiwrap.cc \
 src/common.cc
 libsimple_tpm_pk11_la_LDFLAGS=-version-info 0:0:0
 
+check-tpm:
+	./testscripts/all.sh
+
 mrproper: maintainer-clean
 	rm -f aclocal.m4 configure.scan depcomp missing install-sh config.h.in
 	rm -fr config.guess config.sub build-stamp autom4te.cache/
