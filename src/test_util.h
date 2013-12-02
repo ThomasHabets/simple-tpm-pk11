@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef __INCLUDE__SIMPLE_TPM_PK11_TEST_UTIL_H__
+#define __INCLUDE__SIMPLE_TPM_PK11_TEST_UTIL_H__
 #include<iostream>
 #include<string>
 
@@ -48,6 +50,7 @@ private:
   std::stringstream outbuf_, errbuf_, logbuf_;
   std::streambuf *outold_, *errold_, *logold_;
 };
+#endif
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 2

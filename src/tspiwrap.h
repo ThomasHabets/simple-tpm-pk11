@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 // Wrapping classes to make cleanup easier.
+#ifndef __INCLUDE__SIMPLE_TPM_PK11_TSPIWRAP_H__
+#define __INCLUDE__SIMPLE_TPM_PK11_TSPIWRAP_H__
 
 #include<string>
 
@@ -74,11 +76,13 @@ public:
   TSS_HTPM tpm() { return tpm_.tpm(); }
   TSS_HKEY srk() { return srk_.key(); }
 private:
+  // Order matters. Do not change.
   TspiContext ctx_;
   TspiTPM tpm_;
   TspiKey srk_;
 };
 }  // namespace stpm
+#endif
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 2

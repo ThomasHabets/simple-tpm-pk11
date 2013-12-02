@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifndef __INCLUDE__SIMPLE_TPM_PK11_SESSION_H__
+#define __INCLUDE__SIMPLE_TPM_PK11_SESSION_H__
 #include<memory>
 #include<stdexcept>
 #include<string>
@@ -75,6 +77,7 @@ private:
   std::string pin_;
   int findpos_;
 };
+#endif
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 2

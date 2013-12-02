@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 /**
- *
- *
  * Header file for all library functions.
  */
+#ifndef __INCLUDE__SIMPLE_TPM_PK11_COMMON_H__
+#define __INCLUDE__SIMPLE_TPM_PK11_COMMON_H__
+
 #include<string>
 
 namespace stpm {
@@ -27,16 +28,16 @@ namespace stpm {
 
 // TPM key parts in binary.
 struct Key {
-        std::string exponent;  // Almost certainly 65537.
-        std::string modulus;   //
-        std::string blob;      // For HW keys, blob encrypted by SRK.
+  std::string exponent;  // Almost certainly 65537.
+  std::string modulus;   //
+  std::string blob;      // For HW keys, blob encrypted by SRK.
 };
 
 // Software key parts in binary.
 struct SoftwareKey {
-        std::string exponent;  // Almost certainly 65537.
-        std::string modulus;   //
-        std::string key;       // The private key.
+  std::string exponent;  // Almost certainly 65537.
+  std::string modulus;   //
+  std::string key;       // The private key.
 };
 
 
@@ -72,6 +73,7 @@ std::string xctime();
 
 // Pretty-print keys.
 std::ostream& operator<<(std::ostream&, struct stpm::Key&);
+#endif
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 8

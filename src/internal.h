@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 // Internal include to not pollute non-namespace parts.
+#ifndef __INCLUDE__SIMPLE_TPM_PK11_INTERNAL_H__
+#define __INCLUDE__SIMPLE_TPM_PK11_INTERNAL_H__
 #include<functional>
 
 #include"tss/tspi.h"
@@ -30,6 +32,7 @@ extern TSS_UUID srk_uuid;
 TSS_RESULT tscall(const std::string& name, std::function<TSS_RESULT()> func);
 
 END_NAMESPACE(stpm);
+#endif
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 8
