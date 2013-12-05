@@ -120,6 +120,10 @@ TODO
 * override config location with env.
 * Install in the correct place.
 * Add PKCS11 support to ssh *server*.
+* Global config in /etc.
+* If key file name is missing, try the TPM serial number as filename.
+* Script to automate setting up, including verifying TPM state and fixing it.
+* Auto-generate keys on demand? Or should this only be part of script to set up?
 * Make it work with gpg, and document.
 * Make it work with SSH certs, and document.
 * Make it work with openssl, and document.
