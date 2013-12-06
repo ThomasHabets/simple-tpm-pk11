@@ -11,14 +11,13 @@ manpageoptions()
     take command line options. Instead em(simple-tpm-pk11) options can be
     set up environment variables.
 startdit()
-    dit(SIMPLE_TPM_PK11_DEBUG)
+    dit(bf(SIMPLE_TPM_PK11_DEBUG))
       If set, enables debug level logging.
-    dit(SIMPLE_TPM_PK11_CONFIG=/path/to/config)
+    dit(bf(SIMPLE_TPM_PK11_CONFIG)=/path/to/config)
       Override default config location. Default is ~/.simple-tpm-pk11/config.
       Not implemented yet.
-    dit(SIMPLE_TPM_PK11_LOG_STDERR)
+    dit(bf(SIMPLE_TPM_PK11_LOG_STDERR))
       If set, copies all log output to STDERR.
-      Not implemented yet.
 enddit()
 
 manpagesection(CONFIGURATION FILE)

@@ -28,6 +28,7 @@
 #include<fstream>
 #include<functional>
 #include<iostream>
+#include<sstream>
 #include<string>
 #include<syslog.h>
 #include<vector>
@@ -55,7 +56,7 @@ log_error(const std::string& msg)
 {
   try {
     auto cfg = get_config();
-    *cfg.logfile_ << xctime() << " " << msg << std::endl;
+    stpm::do_log(cfg.logfile_.get(), xctime() + " " + msg);
   } catch(...) {
     std::cerr << "PK11 ERROR> " << msg << std::endl;
   }
@@ -74,7 +75,7 @@ log_debug(const std::string& msg)
 {
   auto cfg = get_config();
   if (cfg.debug_) {
-    *cfg.logfile_ << xctime() << " DEBUG " << msg << std::endl;
+    stpm::do_log(cfg.logfile_.get(), xctime() + " DEBUG " + msg);
   }
 }
 
@@ -83,7 +84,8 @@ get_config()
 {
   const char *home{getenv("HOME")};
   if (home == nullptr) {
-    throw std::string(__func__) + "(): getenv(HOME) failed.";
+    throw std::runtime_error(std::string(__func__) + "(): "
+                             + "getenv(HOME) failed.");
   }
   auto ret = Config{std::string{home} + "/" + config_dir + "/config"};
   if (debug_env()) {

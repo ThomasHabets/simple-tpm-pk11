@@ -92,6 +92,14 @@ Tspi_Context_GetTpmObject(TSS_HCONTEXT hContext,
 }
 
 TSPICALL
+Tspi_TPM_StirRandom(TSS_HTPM hTPM,
+                    UINT32   ulEntropyDataLength,
+                    BYTE*    rgbEntropyData)
+{
+  return TSS_SUCCESS;
+}
+
+TSPICALL
 Tspi_Context_LoadKeyByBlob(TSS_HCONTEXT hContext,
                            TSS_HKEY     hUnwrappingKey,
                            UINT32       ulBlobLength,

@@ -70,7 +70,7 @@ Config::Config(const std::string& fn)
   if (*logfile_) {
     logfile_->open(logfilename_, std::ofstream::app);
     if (!logfile_) {
-      throw "Unable to open logfile " + logfilename_;
+      throw std::runtime_error("Unable to open logfile " + logfilename_);
     }
   }
 }
@@ -187,9 +187,11 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
     default:
       // TODO: handle unknowns better.
       pTemplate[i].ulValueLen = 10;
-      *config_.logfile_ << stpm::xctime()
-                        << " unknown attribute: "
-                        << pTemplate[i].type << std::endl << std::flush;
+      std::stringstream ss;
+      ss << stpm::xctime()
+         << " unknown attribute: "
+         << pTemplate[i].type;
+      stpm::do_log(config_.logfile_.get(), ss.str());
     }
   }
 }
@@ -219,15 +221,17 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
   *pusSignatureLen = signature.size();
   memcpy(pSignature, signature.data(), signature.size());
 
-  *config_.logfile_ << stpm::xctime()
-                    << " signing " << data.size() << " bytes."
-                    << std::endl;
+  std::stringstream ss;
+  ss  << stpm::xctime()
+      << " signing " << data.size() << " bytes.";
+  stpm::do_log(config_.logfile_.get(), ss.str());
   if (config_.debug_) {
-    *config_.logfile_ << stpm::xctime()
-                      << " DEBUG signing " << stpm::to_hex(data)
-                      << " (len " << data.size() << ")"
-                      << ", output " << *pusSignatureLen << " bytes"
-                      << std::endl;
+    ss.str("");
+    ss << stpm::xctime()
+       << " DEBUG signing " << stpm::to_hex(data)
+       << " (len " << data.size() << ")"
+       << ", output " << *pusSignatureLen << " bytes";
+    stpm::do_log(config_.logfile_.get(), ss.str());
   }
 }
 /* ---- Emacs Variables ----

@@ -69,6 +69,22 @@ xctime()
   return buf;
 }
 
+bool
+log_stderr()
+{
+  const char *doit{getenv("SIMPLE_TPM_PK11_LOG_STDERR")};
+  return !!doit;
+}
+
+void
+do_log(std::ostream* o, const std::string& msg)
+{
+  *o << msg << std::endl;
+  if (log_stderr()) {
+    std::cerr << msg << std::endl;
+  }
+}
+
 std::string
 parseError(int code)
 {

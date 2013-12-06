@@ -69,6 +69,8 @@ std::string sign(const Key& key, const std::string& data,
 bool auth_required(const std::string* srk_pin, const Key& key);
 
 std::string xctime();
+
+void do_log(std::ostream* o, const std::string& msg);
 }  // namespace stpm
 
 // Pretty-print keys.
