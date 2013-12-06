@@ -27,6 +27,8 @@ main(int argc, char **argv)
     std::cerr << "Exception: " << msg << std::endl;
   } catch (const char *msg) {
     std::cerr << "Exception: " << msg << std::endl;
+  } catch (const std::exception& e) {
+    std::cerr << "Exception: " << e.what() << std::endl;
   } catch (...) {
     std::cerr << "Exception of unknown type!\n";
   }

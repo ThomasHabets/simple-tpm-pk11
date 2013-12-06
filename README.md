@@ -115,7 +115,6 @@ TODO
 ----
 * Clean up code.
 * Key importing.
-* Inject some randomness into TPM from software.
 * config option: log to stdout and/or stderr in addition to logfile.
 * override config location with env.
 * Install in the correct place.

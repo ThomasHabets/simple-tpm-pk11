@@ -21,7 +21,9 @@
 #include<iostream>
 #include<map>
 #include<sstream>
+#include<stdexcept>
 #include<string>
+#include<vector>
 
 #include"tss/tspi.h"
 #include"trousers/trousers.h"
@@ -49,7 +51,7 @@ tscall(const std::string& name, std::function<TSS_RESULT()> func)
 {
   TSS_RESULT res;
   if (TSS_SUCCESS != (res = func())) {
-    throw name + "(): " + parseError(res);
+    throw std::runtime_error(name + "(): " + parseError(res));
   }
   return res;
 }
@@ -131,6 +133,25 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
 Key
 generate_key(const std::string* srk_pin, const std::string* key_pin) {
   TPMStuff stuff{srk_pin};
+
+  {
+    std::vector<char> buf(32);  // 256 bits.
+    std::ifstream f;
+    f.rdbuf()->pubsetbuf(nullptr, 0);
+    f.open("/dev/random", std::ios::binary);
+    if (!f.good()) {
+      throw std::runtime_error("Failed to open /dev/random");
+    }
+    f.read(&buf[0], buf.size());
+    if (f.fail() || f.eof()) {
+      throw std::runtime_error("EOF in /dev/random");
+    }
+    if (static_cast<size_t>(f.gcount()) != buf.size()) {
+      throw std::runtime_error("Short full read from /dev/random");
+    }
+    TSCALL(Tspi_TPM_StirRandom, stuff.tpm(),
+           buf.size(), (BYTE*)&buf[0]);
+  }
 
   // === Set up key object ===
   int init_flags = 
@@ -232,7 +253,7 @@ to_bin(const std::string& s)
   }
 
   if (s.size() & 1) {
-    throw "to_bin() on odd length string";
+    throw std::runtime_error("to_bin() on odd length string");
   }
   std::string ret;
   for (unsigned c = 0; c < s.size(); c+=2) {
@@ -265,11 +286,11 @@ parse_keyfile(const std::string &s)
     } else if (cmd == "exp") {
       key.exponent = to_bin(rest);
     } else {
-      throw "Keyfile format error(line=" + line + ")";
+      throw std::runtime_error("Keyfile format error(line=" + line + ")");
     }
   }
   if (key.modulus.empty() || key.blob.empty() || key.exponent.empty()) {
-    throw "Keyfile incomplete. TODO: better error.";
+    throw std::runtime_error("Keyfile incomplete. TODO: better error.");
   }
   return key;
 }
