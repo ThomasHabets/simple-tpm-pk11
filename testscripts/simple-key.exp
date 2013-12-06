@@ -3,6 +3,9 @@
 set timeout -1
 set tmpdir "test-tmp"
 
+spawn "mkdir" "-p" "$tmpdir"
+expect eof
+
 send_user "=== Generating key ===\n"
 spawn "./stpm-keygen" "-o" "$tmpdir/simple-key"
 expect "Modulus size: 256"

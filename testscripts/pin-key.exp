@@ -1,7 +1,13 @@
 #!/usr/bin/expect -f
-
+#
+# Warning: this script will try the wrong PIN and could trigger dictionary
+# attack mode in the TPM.
+#
 set timeout -1
 set tmpdir "test-tmp"
+
+spawn "mkdir" "-p" "$tmpdir"
+expect eof
 
 send_user "=== Generating key with PIN ===\n"
 spawn "./stpm-keygen" "-po" "$tmpdir/pin-key"
