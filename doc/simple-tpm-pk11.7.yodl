@@ -15,7 +15,6 @@ startdit()
       If set, enables debug level logging.
     dit(bf(SIMPLE_TPM_PK11_CONFIG)=/path/to/config)
       Override default config location. Default is ~/.simple-tpm-pk11/config.
-      Not implemented yet.
     dit(bf(SIMPLE_TPM_PK11_LOG_STDERR))
       If set, copies all log output to STDERR.
 enddit()

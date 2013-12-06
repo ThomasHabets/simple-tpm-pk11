@@ -73,21 +73,34 @@ debug_env()
 void
 log_debug(const std::string& msg)
 {
-  auto cfg = get_config();
-  if (cfg.debug_) {
-    stpm::do_log(cfg.logfile_.get(), xctime() + " DEBUG " + msg);
+  try {
+    auto cfg = get_config();
+    if (cfg.debug_ || debug_env()) {
+      stpm::do_log(cfg.logfile_.get(), xctime() + " DEBUG " + msg);
+    }
+  } catch (...) {
+    if (debug_env()) {
+      std::cerr << xctime() << " DEBUG " << msg << std::endl;
+    }
   }
 }
 
 Config
 get_config()
 {
-  const char *home{getenv("HOME")};
+  const char* home{getenv("HOME")};
   if (home == nullptr) {
     throw std::runtime_error(std::string(__func__) + "(): "
                              + "getenv(HOME) failed.");
   }
-  auto ret = Config{std::string{home} + "/" + config_dir + "/config"};
+
+  std::string config_path{std::string{home} + "/" + config_dir + "/config"};
+  const char* conf_env{getenv("SIMPLE_TPM_PK11_CONFIG")};
+  if (conf_env) {
+    config_path = conf_env;
+  }
+
+  auto ret = Config{config_path};
   if (debug_env()) {
     ret.debug_ = true;
   }
@@ -108,6 +121,8 @@ wrap_exceptions(const std::string& name, std::function<void()> f)
     log_error(name + "(): " + msg);
   } catch (const char* msg) {
     log_error(name + "(): " + msg);
+  } catch (const std::exception& e) {
+    log_error(name + "(): " + e.what());
   } catch (...) {
     log_error(name + "(): Unknown exception");
   }
@@ -184,42 +199,43 @@ C_Logout(CK_SESSION_HANDLE hSession)
 CK_RV
 C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 {
-  // TODO: fill these out from token.
-  strcpy((char*)pInfo->label, "Simple-TPM-PK11 token");
-  strcpy((char*)pInfo->manufacturerID, "manuf id");
-  strcpy((char*)pInfo->model, "model");
-  strcpy((char*)pInfo->serialNumber, "serial");
+  return wrap_exceptions(__func__, [&]{
+      // TODO: fill these out from token.
+      strcpy((char*)pInfo->label, "Simple-TPM-PK11 token");
+      strcpy((char*)pInfo->manufacturerID, "manuf id");
+      strcpy((char*)pInfo->model, "model");
+      strcpy((char*)pInfo->serialNumber, "serial");
 
-  pInfo->flags = 0;
-  auto config = get_config();
+      pInfo->flags = 0;
+      auto config = get_config();
 
-  std::ifstream kf{config.keyfile_};
-  if (!kf) {
-    throw PK11Error(CKR_GENERAL_ERROR,
-                    "Failed to open key file '" + config.keyfile_ + "'");
-  }
-  const std::string kfs{std::istreambuf_iterator<char>(kf),
-                        std::istreambuf_iterator<char>()};
-  const stpm::Key key = stpm::parse_keyfile(kfs);
+      std::ifstream kf{config.keyfile_};
+      if (!kf) {
+        throw PK11Error(CKR_GENERAL_ERROR,
+                        "Failed to open key file '" + config.keyfile_ + "'");
+      }
+      const std::string kfs{std::istreambuf_iterator<char>(kf),
+                            std::istreambuf_iterator<char>()};
+      const stpm::Key key = stpm::parse_keyfile(kfs);
 
-  if (stpm::auth_required(config.set_srk_pin_ ? &config.srk_pin_ : NULL,
-                          key)) {
-    pInfo->flags |= CKF_LOGIN_REQUIRED;
-  }
-  pInfo->ulMaxSessionCount = 1000;
-  pInfo->ulSessionCount = 0;
-  pInfo->ulMaxRwSessionCount = 1000;
-  pInfo->ulRwSessionCount = 0;
-  pInfo->ulMaxPinLen = 64;
-  pInfo->ulMinPinLen = 6;
-  pInfo->ulTotalPublicMemory = 1000000;
-  pInfo->ulFreePublicMemory = 1000000;
-  pInfo->ulTotalPrivateMemory = 1000000;
-  pInfo->ulFreePrivateMemory = 1000000;
-  pInfo->hardwareVersion.major = 0;
-  pInfo->firmwareVersion.major = 0;
-  strcpy((char*)pInfo->utcTime, "bleh");
-  return CKR_OK;
+      if (stpm::auth_required(config.set_srk_pin_ ? &config.srk_pin_ : NULL,
+                              key)) {
+        pInfo->flags |= CKF_LOGIN_REQUIRED;
+      }
+      pInfo->ulMaxSessionCount = 1000;
+      pInfo->ulSessionCount = 0;
+      pInfo->ulMaxRwSessionCount = 1000;
+      pInfo->ulRwSessionCount = 0;
+      pInfo->ulMaxPinLen = 64;
+      pInfo->ulMinPinLen = 6;
+      pInfo->ulTotalPublicMemory = 1000000;
+      pInfo->ulFreePublicMemory = 1000000;
+      pInfo->ulTotalPrivateMemory = 1000000;
+      pInfo->ulFreePrivateMemory = 1000000;
+      pInfo->hardwareVersion.major = 0;
+      pInfo->firmwareVersion.major = 0;
+      strcpy((char*)pInfo->utcTime, "bleh");
+  });
 }
 
 CK_RV

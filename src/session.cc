@@ -64,7 +64,7 @@ Config::Config(const std::string& fn)
 {
   std::ifstream f{fn};
   if (!f) {
-    throw "TODO: opening config file failed";
+    throw std::runtime_error("Opening config file " + fn + " failed");
   }
   read_file(f);
   if (*logfile_) {
@@ -103,7 +103,7 @@ Config::read_file(std::ifstream& f)
     } else if (cmd == "debug") {
       debug_ = true;
     } else {
-      throw "TODO: unknown config line: " + line;
+      throw std::runtime_error("Unknown config line: " + line);
     }
   }
 }
