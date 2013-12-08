@@ -116,7 +116,6 @@ TODO
 * Clean up code.
 * Key importing.
 * config option: log to stdout and/or stderr in addition to logfile.
-* override config location with env.
 * Install in the correct place.
 * Add PKCS11 support to ssh *server*.
 * Global config in /etc.
