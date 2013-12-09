@@ -85,6 +85,25 @@ do_log(std::ostream* o, const std::string& msg)
   }
 }
 
+int
+keysize_flag(int bits) {
+  switch (bits) {
+  case 512:
+    return TSS_KEY_SIZE_512;
+  case 1024:
+    return TSS_KEY_SIZE_1024;
+  case 2048:
+    return TSS_KEY_SIZE_2048;
+  case 4096:
+    return TSS_KEY_SIZE_4096;
+  case 8192:
+    return TSS_KEY_SIZE_8192;
+  case 16384:
+    return TSS_KEY_SIZE_16384;
+  }
+  throw std::runtime_error("Unknown key size: " + std::to_string(bits) + "bit");
+}
+
 std::string
 parseError(int code)
 {
@@ -147,7 +166,7 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
 }
 
 Key
-generate_key(const std::string* srk_pin, const std::string* key_pin) {
+generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
   TPMStuff stuff{srk_pin};
 
   {
@@ -170,9 +189,9 @@ generate_key(const std::string* srk_pin, const std::string* key_pin) {
   }
 
   // === Set up key object ===
-  int init_flags = 
+  int init_flags =
     TSS_KEY_TYPE_SIGNING
-    | TSS_KEY_SIZE_2048
+    | keysize_flag(bits)
     | TSS_KEY_VOLATILE
     | TSS_KEY_NOT_MIGRATABLE;
 
@@ -236,7 +255,7 @@ generate_key(const std::string* srk_pin, const std::string* key_pin) {
          TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_KEYSIZE,
          &size);
   std::clog << "Size: " << size << std::endl;
-  
+
   // Get keyblob.
   UINT32 blob_size;
   BYTE* blob_blob;
@@ -346,7 +365,6 @@ sign(const Key& key, const std::string& data,
   // === Load key ===
   int init_flags =
     TSS_KEY_TYPE_SIGNING
-    | TSS_KEY_SIZE_2048
     | TSS_KEY_VOLATILE
     | TSS_KEY_NO_AUTHORIZATION
     | TSS_KEY_NOT_MIGRATABLE;
@@ -372,7 +390,7 @@ sign(const Key& key, const std::string& data,
            TSS_SECRET_MODE_SHA1, wks_size, wks);
   }
   TSCALL(Tspi_Policy_AssignToObject, policy_sign, sign);
-        
+
   // === Sign ===
   TSS_HHASH hash;
   UINT32 sig_size;

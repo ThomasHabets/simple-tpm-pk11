@@ -2,6 +2,8 @@ AUTOMAKE_OPTIONS=foreign
 DISTCLEANFILES=*~
 man_MANS=stpm-keygen.1 stpm-sign.1 simple-tpm-pk11.7
 
+EXTRA_DIST=$(man_MANS)
+
 # Generated manpage files are checked in, and are normally not built.
 # That's why there's nothing on the right hand side of this rule.
 # To re-generate, delete the target files and run 'make'.

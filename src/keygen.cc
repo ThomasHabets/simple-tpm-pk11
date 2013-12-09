@@ -25,7 +25,7 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: keygen [ -hsp ] -o <output file>\n";
+  std::cout << "Usage: keygen [ -hsp ] [ -b <bits> ] -o <output file>\n";
   return rc;
 }
 END_NAMESPACE();
@@ -37,9 +37,13 @@ wrapped_main(int argc, char **argv)
   std::string output;
   bool set_srk_pin{false};
   bool set_key_pin{false};
+  int bits = 2048;
 
-  while (EOF != (c = getopt(argc, argv, "ho:sp"))) {
+  while (EOF != (c = getopt(argc, argv, "b:ho:sp"))) {
     switch (c) {
+    case 'b':
+      bits = std::stoi(optarg);
+      break;
     case 'h':
       return usage(0);
     case 's':
@@ -75,7 +79,8 @@ wrapped_main(int argc, char **argv)
   }
 
   auto key = stpm::generate_key(set_srk_pin ? &srk_pin : NULL,
-                                set_key_pin ? &key_pin : NULL);
+                                set_key_pin ? &key_pin : NULL,
+                                bits);
   std::ofstream fo(output);
   if (!fo) {
     std::cerr << "Unable to open '" << output << "'" << std::endl;
