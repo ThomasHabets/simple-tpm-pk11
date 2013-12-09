@@ -154,7 +154,7 @@ generate_key(const std::string* srk_pin, const std::string* key_pin) {
     std::vector<char> buf(32);  // 256 bits.
     std::ifstream f;
     f.rdbuf()->pubsetbuf(nullptr, 0);
-    f.open("/dev/random", std::ios::binary);
+    f.open("/dev/urandom", std::ios::binary);
     if (!f.good()) {
       throw std::runtime_error("Failed to open /dev/random");
     }
