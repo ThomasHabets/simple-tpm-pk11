@@ -50,7 +50,7 @@ User setup
 ### 1. Create key
 ```
 mkdir ~/.simple-tpm-pk11/
-stpm-keygen -f ~/.simple-tpm-pk11/my.key
+stpm-keygen -o ~/.simple-tpm-pk11/my.key
 ```
 
 Try out the key:

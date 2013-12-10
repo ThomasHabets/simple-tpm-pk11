@@ -179,6 +179,17 @@ C_CloseSession(CK_SESSION_HANDLE hSession)
 }
 
 CK_RV
+C_GetSessionInfo(CK_SESSION_HANDLE hSession, CK_SESSION_INFO_PTR pInfo)
+{
+  return wrap_exceptions(__func__, [&]{
+    pInfo->slotID = 0;
+    pInfo->state = CKS_RW_USER_FUNCTIONS; /* ? */
+    pInfo->flags = CKF_SERIAL_SESSION;
+    pInfo->ulDeviceError = 0;
+    });
+}
+
+CK_RV
 C_Login(CK_SESSION_HANDLE hSession,
         CK_USER_TYPE userType, CK_CHAR_PTR pPin,
         CK_ULONG usPinLen)
@@ -193,6 +204,20 @@ C_Logout(CK_SESSION_HANDLE hSession)
 {
   log_debug("Logout()");
   return CKR_OK;
+}
+
+CK_RV
+C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
+{
+  return wrap_exceptions(__func__, [&]{
+      // TODO: fill these out from slot.
+      strcpy((char*)pInfo->slotDescription, "Simple-TPM-PK11 slot");
+      strcpy((char*)pInfo->manufacturerID, "manuf id");
+
+      pInfo->flags = 0;
+      pInfo->hardwareVersion = { 0, 0 };
+      pInfo->firmwareVersion = { 0, 0 };
+  });
 }
 
 
@@ -235,6 +260,17 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
       pInfo->hardwareVersion.major = 0;
       pInfo->firmwareVersion.major = 0;
       strcpy((char*)pInfo->utcTime, "bleh");
+  });
+}
+
+CK_RV
+C_GetMechanismList(CK_SLOT_ID slotId, CK_MECHANISM_TYPE_PTR pMechanismList,
+		   CK_ULONG_PTR pulCount)
+{
+  return wrap_exceptions(__func__, [&]{
+      // We don't support any mechanisms.  This is a blatent lie, because
+      // we do let you sign things.
+      *pulCount = 0;
   });
 }
 
@@ -306,6 +342,13 @@ C_Initialize(CK_VOID_PTR pInitArgs)
   return CKR_OK;
 }
 
+CK_RV
+C_SeedRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSeed, CK_ULONG ulSeedLen)
+{
+  // No random number generation is supported.
+  return CKR_RANDOM_NO_RNG;
+}
+
 __attribute__((constructor))
 void cons()
 {
@@ -314,17 +357,21 @@ void cons()
   F(Initialize);
   F(Finalize);
   F(GetSlotList);
+  F(GetSlotInfo);
   F(GetTokenInfo);
+  F(GetMechanismList);
   F(Login);
   F(Logout);
   F(OpenSession);
   F(CloseSession);
+  F(GetSessionInfo);
   F(FindObjectsInit);
   F(FindObjects);
   F(FindObjectsFinal);
   F(GetAttributeValue);
   F(SignInit);
   F(Sign);
+  F(SeedRandom);
 #undef F
 }
 
