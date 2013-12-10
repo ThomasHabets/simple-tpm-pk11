@@ -116,10 +116,11 @@ TODO
 * Clean up code.
 * Key importing.
 * config option: log to stdout and/or stderr in addition to logfile.
-* override config location with env.
 * Install in the correct place.
 * Add PKCS11 support to ssh *server*.
 * Global config in /etc.
+* Optionally stir with /dev/random when generating keys.
+* Keygen: Configurable key size.
 * If key file name is missing, try the TPM serial number as filename.
 * Script to automate setting up, including verifying TPM state and fixing it.
 * Auto-generate keys on demand? Or should this only be part of script to set up?
