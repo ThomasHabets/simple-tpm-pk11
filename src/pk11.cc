@@ -195,6 +195,20 @@ C_Logout(CK_SESSION_HANDLE hSession)
   return CKR_OK;
 }
 
+CK_RV
+C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
+{
+  return wrap_exceptions(__func__, [&]{
+      // TODO: fill these out from slot.
+      strcpy((char*)pInfo->slotDescription, "Simple-TPM-PK11 slot");
+      strcpy((char*)pInfo->manufacturerID, "manuf id");
+
+      pInfo->flags = 0;
+      pInfo->hardwareVersion = { 0, 0 };
+      pInfo->firmwareVersion = { 0, 0 };
+  });
+}
+
 
 CK_RV
 C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
@@ -314,6 +328,7 @@ void cons()
   F(Initialize);
   F(Finalize);
   F(GetSlotList);
+  F(GetSlotInfo);
   F(GetTokenInfo);
   F(Login);
   F(Logout);
