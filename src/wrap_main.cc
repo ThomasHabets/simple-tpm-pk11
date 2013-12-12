@@ -16,6 +16,8 @@
 #include<iostream>
 #include<string>
 
+#include"common.h"
+
 extern int wrapped_main(int argc, char **argv);
 
 int
@@ -23,13 +25,15 @@ main(int argc, char **argv)
 {
   try {
     return wrapped_main(argc, argv);
-  } catch (const std::string& msg) {
-    std::cerr << "Exception: " << msg << std::endl;
-  } catch (const char *msg) {
-    std::cerr << "Exception: " << msg << std::endl;
+  } catch (const stpm::TSPIException& e) {
+    std::cerr << "Exception:\n  " << e.what() << std::endl;
+    if (!e.extra().empty()) {
+      std::cerr << e.extra() << std::endl;
+    }
   } catch (const std::exception& e) {
     std::cerr << "Exception: " << e.what() << std::endl;
   } catch (...) {
+    // Shouldn't happen.
     std::cerr << "Exception of unknown type!\n";
   }
   return 1;

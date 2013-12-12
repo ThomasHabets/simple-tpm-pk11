@@ -51,9 +51,26 @@ tscall(const std::string& name, std::function<TSS_RESULT()> func)
 {
   TSS_RESULT res;
   if (TSS_SUCCESS != (res = func())) {
-    throw std::runtime_error(name + "(): " + parseError(res));
+    throw TSPIException(name, res);
   }
   return res;
+}
+
+TSPIException::TSPIException(const std::string& func, int code)
+    :std::runtime_error(func + ": " + parseError(code)),
+     tspi_error(code)
+{
+  switch (tspi_error) {
+  case TPM_E_AUTHFAIL:
+    extra_ = "Likely problem:\n"
+        "  Either the SRK password or the key password is incorrect.\n"
+        "  The Well Known Secret (20 nulls unhashed) is not the same as the password \"\".\n"
+        "Possible solution:\n"
+        "  The SRK password can (and arguable should) be set to the Well Known Secret using:\n"
+        "    tpm_changeownerauth -s -r\n"
+        "  Alternatively the SRK password can be given with -s to stpm-keygen/stpm-sign and\n"
+        "  with srk_pin in the configuration file for the PKCS#11 module.";
+  }
 }
 
 std::string

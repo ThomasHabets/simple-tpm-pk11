@@ -19,12 +19,26 @@
 #ifndef __INCLUDE__SIMPLE_TPM_PK11_COMMON_H__
 #define __INCLUDE__SIMPLE_TPM_PK11_COMMON_H__
 
+#include<stdexcept>
 #include<string>
 
 namespace stpm {
 #if 0
 }
 #endif
+
+// Exception type for TPM errors, adding helpful troubleshooting information
+// in extra().
+class TSPIException: public std::runtime_error {
+public:
+  TSPIException(const std::string& s, int code);
+  virtual ~TSPIException() throw() {};
+  const std::string& extra() const { return extra_; }
+  const int tspi_error;
+
+private:
+  std::string extra_;
+};
 
 // TPM key parts in binary.
 struct Key {
