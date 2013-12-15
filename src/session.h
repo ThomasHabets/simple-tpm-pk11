@@ -1,4 +1,4 @@
-/**
+/** -*- c++ -*-
  * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,24 +21,19 @@
 
 #include<opencryptoki/pkcs11.h>
 
-class PK11Error: public std::exception {
- public:
-  PK11Error(int code): code(code), msg(get_msg()) {}
-  PK11Error(int code, const std::string& msg)
-    :code(code),
-     msg(get_msg() + ": " + msg)
-  {
-  }
+class PK11Error: public std::runtime_error {
+public:
+  PK11Error(int incode, const std::string& msg)
+    :std::runtime_error("Code=" + std::to_string(code) + ": " + msg),
+     code(incode)
+  {}
   virtual ~PK11Error() throw() {}
 
   const int code;
-  const std::string msg;
- private:
-  std::string get_msg() const;
 };
 
 class Config {
- public:
+public:
   Config(const std::string&);
 
   std::string configfile_;

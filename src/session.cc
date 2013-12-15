@@ -46,14 +46,6 @@ xdirname(const std::string& relative)
 }
 END_NAMESPACE();
 
-std::string
-PK11Error::get_msg() const
-{
-  std::stringstream ss;
-  ss << "Code=" << code;
-  return ss.str();
-}
-
 Config::Config(const std::string& fn)
   :configfile_(fn),
    logfile_(new std::ofstream),

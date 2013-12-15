@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/**
+ * Fake libtspi for testing.
+ */
 #include"tss/tspi.h"
-int foobar;
 
 TSPICALL
 Tspi_Context_Create(TSS_HCONTEXT* phContext)

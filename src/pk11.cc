@@ -115,12 +115,8 @@ wrap_exceptions(const std::string& name, std::function<void()> f)
     f();
     return CKR_OK;
   } catch (const PK11Error& e) {
-    log_error(name + "(): " + e.msg);
+    log_error(name + "(): " + e.what());
     return e.code;
-  } catch (const std::string& msg) {
-    log_error(name + "(): " + msg);
-  } catch (const char* msg) {
-    log_error(name + "(): " + msg);
   } catch (const std::exception& e) {
     log_error(name + "(): " + e.what());
   } catch (...) {
@@ -137,8 +133,8 @@ C_GetInfo(CK_INFO_PTR pInfo)
   pInfo->cryptokiVersion.major = 0;
   pInfo->cryptokiVersion.minor = 1;
   // TODO: flags
-  strcpy((char*)pInfo->manufacturerID, "habets");
-  strcpy((char*)pInfo->libraryDescription, "simple-tpm-pk11");
+  strcpy((char*)pInfo->manufacturerID, "simple-tpm-pk11 manufacturer");
+  strcpy((char*)pInfo->libraryDescription, "simple-tpm-pk11 library");
 
   // TODO: take these version numbers from somewhere canonical.
   pInfo->libraryVersion.major = 0;
@@ -186,7 +182,7 @@ C_GetSessionInfo(CK_SESSION_HANDLE hSession, CK_SESSION_INFO_PTR pInfo)
     pInfo->state = CKS_RW_USER_FUNCTIONS; /* ? */
     pInfo->flags = CKF_SERIAL_SESSION;
     pInfo->ulDeviceError = 0;
-    });
+  });
 }
 
 CK_RV
@@ -195,7 +191,7 @@ C_Login(CK_SESSION_HANDLE hSession,
         CK_ULONG usPinLen)
 {
   return wrap_exceptions(__func__, [&]{
-      sessions[hSession].Login(userType, std::string{pPin,pPin+usPinLen});
+      sessions[hSession].Login(userType, std::string{pPin, pPin+usPinLen});
   });
 }
 
@@ -259,7 +255,7 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
       pInfo->ulFreePrivateMemory = 1000000;
       pInfo->hardwareVersion.major = 0;
       pInfo->firmwareVersion.major = 0;
-      strcpy((char*)pInfo->utcTime, "bleh");
+      strcpy((char*)pInfo->utcTime, "bleh");  // TODO.
   });
 }
 
