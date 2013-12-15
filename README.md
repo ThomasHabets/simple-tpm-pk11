@@ -147,6 +147,24 @@ Reference links
 * http://trousers.sourceforge.net/dev_faq.html
 
 
+Make new release
+----------------
+```
+V=0.02
+git checkout -b simple-tpm-pk11-$V-branch
+make mrproper
+# make sure git status is empty
+./bootstrap.sh
+rm -fr autom4te.cache
+git add .
+git commit
+[...]
+git tag simple-tpm-pk11-$V
+git checkout master
+git push --tags
+```
+
+
 Some random notes, not instructions
 -----------------------------------
 openssl genrsa -out rsa-key 2048
