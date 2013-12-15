@@ -70,6 +70,16 @@ TSPIException::TSPIException(const std::string& func, int code)
         "    tpm_changeownerauth -s -r\n"
         "  Alternatively the SRK password can be given with -s to stpm-keygen/stpm-sign and\n"
         "  with srk_pin in the configuration file for the PKCS#11 module.";
+    break;
+  case TSS_LAYER_TSP | TSS_E_COMM_FAILURE:
+    extra_ = "Likely problem:\n"
+      "  The tscd daemon is not running and listening on TCP port 30003, or there\n"
+      "  is a firewall preventing connections to it.\n"
+      "Possible solution:\n"
+      "  Make sure trousers is started (/etc/init.d/trousers start) correctly, and\n"
+      "  and check any logs for why it might not be coming up correctly.\n"
+      "  It could fail to start because it's not finding a device /dev/tpm*.";
+    break;
   }
 }
 
@@ -186,7 +196,7 @@ Key
 generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
   TPMStuff stuff{srk_pin};
 
-  {
+  { // Get some random data and seed the TPM with it.
     std::vector<char> buf(32);  // 256 bits.
     std::ifstream f;
     f.rdbuf()->pubsetbuf(nullptr, 0);
