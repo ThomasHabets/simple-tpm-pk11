@@ -128,30 +128,30 @@ wrap_exceptions(const std::string& name, std::function<void()> f)
 CK_RV
 C_GetInfo(CK_INFO_PTR pInfo)
 {
-  log_debug("GetInfo()");
-  memset(pInfo, 0, sizeof(CK_INFO));
-  pInfo->cryptokiVersion.major = 0;
-  pInfo->cryptokiVersion.minor = 1;
-  // TODO: flags
-  strcpy((char*)pInfo->manufacturerID, "simple-tpm-pk11 manufacturer");
-  strcpy((char*)pInfo->libraryDescription, "simple-tpm-pk11 library");
+  return wrap_exceptions(__func__, [&]{
+      memset(pInfo, 0, sizeof(CK_INFO));
+      pInfo->cryptokiVersion.major = 0;
+      pInfo->cryptokiVersion.minor = 1;
+      // TODO: flags
+      strcpy((char*)pInfo->manufacturerID, "simple-tpm-pk11 manufacturer");
+      strcpy((char*)pInfo->libraryDescription, "simple-tpm-pk11 library");
 
-  // TODO: take these version numbers from somewhere canonical.
-  pInfo->libraryVersion.major = 0;
-  pInfo->libraryVersion.minor = 1;
-  return CKR_OK;
+      // TODO: take these version numbers from somewhere canonical.
+      pInfo->libraryVersion.major = 0;
+      pInfo->libraryVersion.minor = 1;
+  });
 }
 
 CK_RV
 C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList,
               CK_ULONG_PTR pusCount)
 {
-  log_debug("GetSlotList()");
-  if (*pusCount) {
-    *pSlotList = 0x1234;
-  }
-  *pusCount = 1;
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{
+      if (*pusCount) {
+        *pSlotList = 0x1234;
+      }
+      *pusCount = 1;
+  });
 }
 
 CK_RV
@@ -170,8 +170,7 @@ C_OpenSession(CK_SLOT_ID slotID, CK_FLAGS flags,
 CK_RV
 C_CloseSession(CK_SESSION_HANDLE hSession)
 {
-  log_debug("CloseSession()");
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{});
 }
 
 CK_RV
@@ -198,8 +197,7 @@ C_Login(CK_SESSION_HANDLE hSession,
 CK_RV
 C_Logout(CK_SESSION_HANDLE hSession)
 {
-  log_debug("Logout()");
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{});
 }
 
 CK_RV
@@ -273,17 +271,16 @@ C_GetMechanismList(CK_SLOT_ID slotId, CK_MECHANISM_TYPE_PTR pMechanismList,
 CK_RV
 C_Finalize(CK_VOID_PTR pReserved)
 {
-  log_debug("Finalize()");
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{});
 }
 
 CK_RV
 C_FindObjectsInit(CK_SESSION_HANDLE hSession, CK_ATTRIBUTE_PTR filters,
                   CK_ULONG nfilters)
 {
-  log_debug("FindObjectsInit()");
-  sessions[hSession].FindObjectsInit(filters, nfilters);
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{
+      sessions[hSession].FindObjectsInit(filters, nfilters);
+  });
 }
 
 CK_RV
@@ -291,16 +288,15 @@ C_FindObjects(CK_SESSION_HANDLE hSession,
               CK_OBJECT_HANDLE_PTR phObject, CK_ULONG usMaxObjectCount,
               CK_ULONG_PTR nfound)
 {
-  log_debug("FindObjects()");
-  *nfound = sessions[hSession].FindObjects(phObject, usMaxObjectCount);
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{
+      *nfound = sessions[hSession].FindObjects(phObject, usMaxObjectCount);
+  });
 }
 
 CK_RV
 C_FindObjectsFinal(CK_SESSION_HANDLE hSession)
 {
-  log_debug("FindObjectsFinal()");
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{});
 }
 
 CK_RV
@@ -316,9 +312,9 @@ CK_RV
 C_SignInit(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
            CK_OBJECT_HANDLE hKey)
 {
-  log_debug("SignInit()");
-  sessions[hSession].SignInit(pMechanism, hKey);
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{
+      sessions[hSession].SignInit(pMechanism, hKey);
+  });
 }
 
 CK_RV
@@ -335,14 +331,16 @@ C_Sign(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pData,
 CK_RV
 C_Initialize(CK_VOID_PTR pInitArgs)
 {
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{});
 }
 
 CK_RV
 C_SeedRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSeed, CK_ULONG ulSeedLen)
 {
-  // No random number generation is supported.
-  return CKR_RANDOM_NO_RNG;
+  return wrap_exceptions(__func__, [&]{
+      // No random number generation is supported.
+      throw PK11Error(CKR_RANDOM_NO_RNG, "Not supported.");
+  });
 }
 
 __attribute__((constructor))
@@ -376,8 +374,9 @@ END_NAMESPACE();
 extern "C" CK_RV
 C_GetFunctionList(CK_FUNCTION_LIST_PTR_PTR ppFunctionList)
 {
-  *ppFunctionList = &funclist;
-  return CKR_OK;
+  return wrap_exceptions(__func__, [&]{
+      *ppFunctionList = &funclist;
+  });
 }
 /* ---- Emacs Variables ----
  * Local Variables:
