@@ -43,6 +43,7 @@ operator<<(std::ostream& o, struct stpm::Key& key)
 
 BEGIN_NAMESPACE(stpm);
 const std::string random_device = "/dev/urandom";
+const char* env_log_stderr = "SIMPLE_TPM_PK11_LOG_STDERR";
 const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
 // Wrap Tspi_* calls, checking return value and throwing exception.
@@ -119,7 +120,7 @@ xctime()
 bool
 log_stderr()
 {
-  const char *doit{getenv("SIMPLE_TPM_PK11_LOG_STDERR")};
+  const char *doit{getenv(env_log_stderr)};
   return !!doit;
 }
 

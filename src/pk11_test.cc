@@ -14,19 +14,35 @@
  * limitations under the License.
  */
 #include"gtest/gtest.h"
-
 #include<opencryptoki/pkcs11.h>
 
 namespace fake_tspi_data {
   extern int keysize;
 }
 
-TEST(PK11, GetInfo)
+class PK11Test: public ::testing::Test {
+public:
+  void SetUp()
+  {
+    setenv("SIMPLE_TPM_PK11_CONFIG", "testdata/pk11.config", 1);
+    setenv("SIMPLE_TPM_PK11_DEBUG", "on", 1);
+    EXPECT_EQ(CKR_OK, C_GetFunctionList(&func_));
+    EXPECT_EQ(CKR_OK, func_->C_Initialize(h_));
+  }
+  void TearDown()
+  {
+    EXPECT_EQ(CKR_OK, func_->C_Finalize(h_));
+  }
+
+protected:
+  CK_FUNCTION_LIST *func_;
+  void* h_;
+};
+
+TEST_F(PK11Test, GetInfo)
 {
-  CK_FUNCTION_LIST *fl;
-  EXPECT_EQ(CKR_OK, C_GetFunctionList(&fl));
   CK_INFO info;
-  EXPECT_EQ(CKR_OK, fl->C_GetInfo(&info));
+  EXPECT_EQ(CKR_OK, func_->C_GetInfo(&info));
   EXPECT_EQ(0, info.cryptokiVersion.major);
   EXPECT_EQ(1, info.cryptokiVersion.minor);
   EXPECT_EQ(0, info.libraryVersion.major);
@@ -35,4 +51,25 @@ TEST(PK11, GetInfo)
             std::string((char*)info.manufacturerID));
   EXPECT_EQ("simple-tpm-pk11 library",
             std::string((char*)info.libraryDescription));
+}
+
+TEST_F(PK11Test, Sign)
+{
+  // TODO: actually test correct output.
+  CK_SESSION_HANDLE s;
+  EXPECT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+
+  CK_MECHANISM mech = {
+    CKM_RSA_PKCS, NULL_PTR, 0
+  };
+
+  CK_OBJECT_HANDLE key;
+  // TODO: Get first key.
+
+  CK_BYTE data[35];
+  CK_BYTE signature[20];
+  CK_ULONG slen;
+  EXPECT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
+  EXPECT_EQ(CKR_OK, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+  EXPECT_EQ(CKR_OK, func_->C_CloseSession(s));
 }

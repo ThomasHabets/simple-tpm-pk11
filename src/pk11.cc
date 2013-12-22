@@ -45,6 +45,8 @@ BEGIN_NAMESPACE();
 
 CK_FUNCTION_LIST funclist;
 const std::string config_dir = ".simple-tpm-pk11";
+const char* env_debug = "SIMPLE_TPM_PK11_DEBUG";
+const char* env_config = "SIMPLE_TPM_PK11_CONFIG";
 
 // TODO: allocate and free sessions properly.
 std::vector<Session> sessions;
@@ -66,7 +68,7 @@ log_error(const std::string& msg)
 bool
 debug_env()
 {
-  const char *dbg{getenv("SIMPLE_TPM_PK11_DEBUG")};
+  const char *dbg{getenv(env_debug)};
   return !!dbg;
 }
 
@@ -95,7 +97,7 @@ get_config()
   }
 
   std::string config_path{std::string{home} + "/" + config_dir + "/config"};
-  const char* conf_env{getenv("SIMPLE_TPM_PK11_CONFIG")};
+  const char* conf_env{getenv(env_config)};
   if (conf_env) {
     config_path = conf_env;
   }
