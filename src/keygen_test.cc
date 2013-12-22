@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "gtest/gtest.h"
+#include"gtest/gtest.h"
 
-#include "test_util.h"
+#include"test_util.h"
 
 namespace fake_tspi_data {
   extern int keysize;

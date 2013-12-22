@@ -16,6 +16,8 @@
 #include"gtest/gtest.h"
 #include<opencryptoki/pkcs11.h>
 
+#include"test_util.h"
+
 namespace fake_tspi_data {
   extern int keysize;
 }
@@ -35,6 +37,7 @@ public:
   }
 
 protected:
+  CaptureStreams cs;
   CK_FUNCTION_LIST *func_;
   void* h_;
 };
@@ -51,6 +54,34 @@ TEST_F(PK11Test, GetInfo)
             std::string((char*)info.manufacturerID));
   EXPECT_EQ("simple-tpm-pk11 library",
             std::string((char*)info.libraryDescription));
+}
+
+TEST_F(PK11Test, NoConfig)
+{
+  setenv("SIMPLE_TPM_PK11_CONFIG", "/config/missing/here", 1);
+
+  CK_SESSION_HANDLE s;
+  EXPECT_EQ(CKR_FUNCTION_FAILED, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+}
+
+TEST_F(PK11Test, EmptyConfig)
+{
+  setenv("SIMPLE_TPM_PK11_CONFIG", "/dev/null", 1);
+  CK_SESSION_HANDLE s;
+  EXPECT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+
+  CK_MECHANISM mech = {
+    CKM_RSA_PKCS, NULL_PTR, 0
+  };
+
+  CK_OBJECT_HANDLE key;
+  // TODO: Get first key.
+
+  CK_BYTE data[35];
+  CK_BYTE signature[20];
+  CK_ULONG slen;
+  EXPECT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
+  EXPECT_EQ(CKR_GENERAL_ERROR, func_->C_Sign(s, data, sizeof(data), signature, &slen));
 }
 
 TEST_F(PK11Test, Sign)

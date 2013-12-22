@@ -16,6 +16,7 @@
 #ifndef __INCLUDE__SIMPLE_TPM_PK11_SESSION_H__
 #define __INCLUDE__SIMPLE_TPM_PK11_SESSION_H__
 #include<memory>
+#include<sstream>
 #include<stdexcept>
 #include<string>
 
@@ -24,7 +25,7 @@
 class PK11Error: public std::runtime_error {
 public:
   PK11Error(int incode, const std::string& msg)
-    :std::runtime_error("Code=" + std::to_string(code) + ": " + msg),
+    :std::runtime_error("Code=" + std::to_string(unsigned(code)) + ": " + msg),
      code(incode)
   {}
   virtual ~PK11Error() throw() {}
