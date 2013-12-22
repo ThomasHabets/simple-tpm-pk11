@@ -106,12 +106,6 @@ Tested with
 * OpenSSH 5.9
 
 
-Other notes, to be put in manpages
-----------------------------------
-* Setting SIMPLE_TPM_PK11_DEBUG env enables more verbose logging.
-* Adding "debug" to the config file does the same.
-
-
 TODO
 ----
 * Clean up code.
@@ -167,7 +161,9 @@ git push --tags
 
 Some random notes, not instructions
 -----------------------------------
+```
 openssl genrsa -out rsa-key 2048
 openssl rsa -in rsa-key -modulus
 exponent is always 65537.
 ssh-keygen -f rsa-key -y > rsa-key.pub
+```
