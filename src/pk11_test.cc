@@ -28,12 +28,12 @@ public:
   {
     setenv("SIMPLE_TPM_PK11_CONFIG", "testdata/pk11.config", 1);
     setenv("SIMPLE_TPM_PK11_DEBUG", "on", 1);
-    EXPECT_EQ(CKR_OK, C_GetFunctionList(&func_));
-    EXPECT_EQ(CKR_OK, func_->C_Initialize(h_));
+    ASSERT_EQ(CKR_OK, C_GetFunctionList(&func_));
+    ASSERT_EQ(CKR_OK, func_->C_Initialize(h_));
   }
   void TearDown()
   {
-    EXPECT_EQ(CKR_OK, func_->C_Finalize(h_));
+    ASSERT_EQ(CKR_OK, func_->C_Finalize(h_));
   }
 
 protected:
@@ -45,14 +45,14 @@ protected:
 TEST_F(PK11Test, GetInfo)
 {
   CK_INFO info;
-  EXPECT_EQ(CKR_OK, func_->C_GetInfo(&info));
-  EXPECT_EQ(0, info.cryptokiVersion.major);
-  EXPECT_EQ(1, info.cryptokiVersion.minor);
-  EXPECT_EQ(0, info.libraryVersion.major);
-  EXPECT_EQ(1, info.libraryVersion.minor);
-  EXPECT_EQ("simple-tpm-pk11 manufacturer",
+  ASSERT_EQ(CKR_OK, func_->C_GetInfo(&info));
+  ASSERT_EQ(0, info.cryptokiVersion.major);
+  ASSERT_EQ(1, info.cryptokiVersion.minor);
+  ASSERT_EQ(0, info.libraryVersion.major);
+  ASSERT_EQ(1, info.libraryVersion.minor);
+  ASSERT_EQ("simple-tpm-pk11 manufacturer",
             std::string((char*)info.manufacturerID));
-  EXPECT_EQ("simple-tpm-pk11 library",
+  ASSERT_EQ("simple-tpm-pk11 library",
             std::string((char*)info.libraryDescription));
 }
 
@@ -61,14 +61,14 @@ TEST_F(PK11Test, NoConfig)
   setenv("SIMPLE_TPM_PK11_CONFIG", "/config/missing/here", 1);
 
   CK_SESSION_HANDLE s;
-  EXPECT_EQ(CKR_FUNCTION_FAILED, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+  ASSERT_EQ(CKR_FUNCTION_FAILED, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
 }
 
 TEST_F(PK11Test, EmptyConfig)
 {
   setenv("SIMPLE_TPM_PK11_CONFIG", "/dev/null", 1);
   CK_SESSION_HANDLE s;
-  EXPECT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+  ASSERT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
 
   CK_MECHANISM mech = {
     CKM_RSA_PKCS, NULL_PTR, 0
@@ -80,15 +80,59 @@ TEST_F(PK11Test, EmptyConfig)
   CK_BYTE data[35];
   CK_BYTE signature[20];
   CK_ULONG slen;
-  EXPECT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
-  EXPECT_EQ(CKR_GENERAL_ERROR, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+  ASSERT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
+  ASSERT_EQ(CKR_GENERAL_ERROR, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+}
+
+TEST_F(PK11Test, MissingKeyfile)
+{
+  setenv("SIMPLE_TPM_PK11_CONFIG", "testdata/pk11.missingkeyfile.config", 1);
+  setenv("SIMPLE_TPM_PK11_LOG_STDERR", "on", 1);
+  CK_SESSION_HANDLE s;
+  ASSERT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+
+  CK_MECHANISM mech = {
+    CKM_RSA_PKCS, NULL_PTR, 0
+  };
+
+  CK_OBJECT_HANDLE key;
+  // TODO: Get first key.
+
+  CK_BYTE data[35];
+  CK_BYTE signature[20];
+  CK_ULONG slen;
+  ASSERT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
+  ASSERT_EQ(CKR_GENERAL_ERROR, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+  EXPECT_NE(std::string::npos, cs.stderr().find("Failed to open key file 'testdata/missing-file'"));
+}
+
+TEST_F(PK11Test, BadKeyfile)
+{
+  setenv("SIMPLE_TPM_PK11_CONFIG", "testdata/pk11.badkeyfile.config", 1);
+  setenv("SIMPLE_TPM_PK11_LOG_STDERR", "on", 1);
+  CK_SESSION_HANDLE s;
+  ASSERT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+
+  CK_MECHANISM mech = {
+    CKM_RSA_PKCS, NULL_PTR, 0
+  };
+
+  CK_OBJECT_HANDLE key;
+  // TODO: Get first key.
+
+  CK_BYTE data[35];
+  CK_BYTE signature[20];
+  CK_ULONG slen;
+  ASSERT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
+  ASSERT_EQ(CKR_FUNCTION_FAILED, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+  EXPECT_NE(std::string::npos, cs.stderr().find("Keyfile format error"));
 }
 
 TEST_F(PK11Test, Sign)
 {
   // TODO: actually test correct output.
   CK_SESSION_HANDLE s;
-  EXPECT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+  ASSERT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
 
   CK_MECHANISM mech = {
     CKM_RSA_PKCS, NULL_PTR, 0
@@ -100,7 +144,7 @@ TEST_F(PK11Test, Sign)
   CK_BYTE data[35];
   CK_BYTE signature[20];
   CK_ULONG slen;
-  EXPECT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
-  EXPECT_EQ(CKR_OK, func_->C_Sign(s, data, sizeof(data), signature, &slen));
-  EXPECT_EQ(CKR_OK, func_->C_CloseSession(s));
+  ASSERT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
+  ASSERT_EQ(CKR_OK, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+  ASSERT_EQ(CKR_OK, func_->C_CloseSession(s));
 }

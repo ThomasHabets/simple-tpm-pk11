@@ -83,9 +83,15 @@ Config::read_file(std::ifstream& f)
     getline(linetokens, rest);
 
     if (cmd == "key") {
-      keyfile_ = xdirname(configfile_) + rest;
+      keyfile_ = rest;
+      if (keyfile_.substr(0, 1) != "/") {
+        keyfile_ = xdirname(configfile_) + rest;
+      }
     } else if (cmd == "log") {
-      logfilename_ = xdirname(configfile_) + rest;
+      logfilename_ = rest;
+      if (logfilename_.substr(0, 1) != "/") {
+        logfilename_ = xdirname(configfile_) + rest;
+      }
     } else if (cmd == "key_pin") {
       key_pin_ = rest;
       set_key_pin_ = true;
