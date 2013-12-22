@@ -128,6 +128,28 @@ TEST_F(PK11Test, BadKeyfile)
   EXPECT_NE(std::string::npos, cs.stderr().find("Keyfile format error"));
 }
 
+TEST_F(PK11Test, AbsKeyfile)
+{
+  setenv("SIMPLE_TPM_PK11_CONFIG", "testdata/pk11.abskeyfile.config", 1);
+  setenv("SIMPLE_TPM_PK11_LOG_STDERR", "on", 1);
+  CK_SESSION_HANDLE s;
+  ASSERT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
+
+  CK_MECHANISM mech = {
+    CKM_RSA_PKCS, NULL_PTR, 0
+  };
+
+  CK_OBJECT_HANDLE key;
+  // TODO: Get first key.
+
+  CK_BYTE data[35];
+  CK_BYTE signature[20];
+  CK_ULONG slen;
+  ASSERT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
+  ASSERT_EQ(CKR_FUNCTION_FAILED, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+  EXPECT_NE(std::string::npos, cs.stderr().find("Keyfile incomplete"));
+}
+
 TEST_F(PK11Test, Sign)
 {
   // TODO: actually test correct output.
