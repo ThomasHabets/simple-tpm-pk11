@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include<iostream>
+#include<libgen.h>
 #include<string>
 
 #include"common.h"
@@ -23,18 +24,19 @@ extern int wrapped_main(int argc, char **argv);
 int
 main(int argc, char **argv)
 {
+  const std::string prefix = basename(argv[0]);
   try {
     return wrapped_main(argc, argv);
   } catch (const stpm::TSPIException& e) {
-    std::cerr << "Exception:\n  " << e.what() << std::endl;
+    std::cerr << prefix << ": Exception:\n  " << e.what() << std::endl;
     if (!e.extra().empty()) {
       std::cerr << e.extra() << std::endl;
     }
   } catch (const std::exception& e) {
-    std::cerr << "Exception: " << e.what() << std::endl;
+    std::cerr << prefix << ": Exception: " << e.what() << std::endl;
   } catch (...) {
     // Shouldn't happen.
-    std::cerr << "Exception of unknown type!\n";
+    std::cerr << prefix << ": Exception of unknown type!\n";
   }
   return 1;
 }

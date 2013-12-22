@@ -32,7 +32,8 @@
 #include"tspiwrap.h"
 #include"internal.h"
 
-std::ostream& operator<<(std::ostream& o, struct stpm::Key& key)
+std::ostream&
+operator<<(std::ostream& o, struct stpm::Key& key)
 {
   o << "mod=" << stpm::to_hex(key.modulus)
     << ",exp=" << stpm::to_hex(key.exponent)
@@ -41,8 +42,8 @@ std::ostream& operator<<(std::ostream& o, struct stpm::Key& key)
 }
 
 BEGIN_NAMESPACE(stpm);
-
-TSS_UUID srk_uuid = TSS_UUID_SRK;
+const std::string random_device = "/dev/urandom";
+const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
 // Wrap Tspi_* calls, checking return value and throwing exception.
 // TODO: Adding debug logging.
@@ -57,30 +58,49 @@ tscall(const std::string& name, std::function<TSS_RESULT()> func)
 }
 
 TSPIException::TSPIException(const std::string& func, int code)
-    :std::runtime_error(func + ": " + parseError(code)),
-     tspi_error(code)
+    :std::runtime_error(func + ": " + code_to_string(code)),
+     tspi_error(code),
+     extra_(code_to_extra(code))
+{ }
+
+// Turn trousers error code into useful string.
+std::string
+TSPIException::code_to_string(int code)
 {
-  switch (tspi_error) {
+  const std::string layer{Trspi_Error_Layer(code)};
+  const std::string err{Trspi_Error_String(code)};
+
+  std::stringstream ss;
+  ss << "Code=0x"
+     << std::setw(8) << std::setbase(16) << std::setfill('0') << code
+     << ": " << layer
+     << ": " << err;
+  return ss.str();
+}
+
+std::string
+TSPIException::code_to_extra(int code)
+{
+  switch (code) {
   case TPM_E_AUTHFAIL:
-    extra_ = "Likely problem:\n"
-        "  Either the SRK password or the key password is incorrect.\n"
-        "  The Well Known Secret (20 nulls unhashed) is not the same as the password \"\".\n"
-        "Possible solution:\n"
-        "  The SRK password can (and arguable should) be set to the Well Known Secret using:\n"
-        "    tpm_changeownerauth -s -r\n"
-        "  Alternatively the SRK password can be given with -s to stpm-keygen/stpm-sign and\n"
-        "  with srk_pin in the configuration file for the PKCS#11 module.";
-    break;
+    return "Likely problem:\n"
+      "  Either the SRK password or the key password is incorrect.\n"
+      "  The Well Known Secret (20 nulls unhashed) is not the same as the password \"\".\n"
+      "Possible solution:\n"
+      "  The SRK password can (and arguable should) be set to the Well Known Secret using:\n"
+      "    tpm_changeownerauth -s -r\n"
+      "  Alternatively the SRK password can be given with -s to stpm-keygen/stpm-sign and\n"
+      "  with srk_pin in the configuration file for the PKCS#11 module.";
   case TSS_LAYER_TSP | TSS_E_COMM_FAILURE:
-    extra_ = "Likely problem:\n"
+    return "Likely problem:\n"
       "  The tscd daemon is not running and listening on TCP port 30003, or there\n"
       "  is a firewall preventing connections to it.\n"
       "Possible solution:\n"
       "  Make sure trousers is started (/etc/init.d/trousers start) correctly, and\n"
       "  and check any logs for why it might not be coming up correctly.\n"
       "  It could fail to start because it's not finding a device /dev/tpm*.";
-    break;
   }
+  return "";
 }
 
 std::string
@@ -131,21 +151,7 @@ keysize_flag(int bits) {
   throw std::runtime_error("Unknown key size: " + std::to_string(bits) + "bit");
 }
 
-std::string
-parseError(int code)
-{
-  const std::string layer{Trspi_Error_Layer(code)};
-  const std::string err{Trspi_Error_String(code)};
-
-  std::stringstream ss;
-  ss << "Code=0x"
-     << std::setw(8) << std::setbase(16) << std::setfill('0') << code
-     << ": " << layer
-     << ": " << err;
-  return ss.str();
-}
-
-// TODO: Complete this implementatino.
+// TODO: Complete this implementation.
 Key
 wrap_key(const std::string* srk_pin, const std::string* key_pin,
          const SoftwareKey& swkey)
@@ -200,16 +206,16 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
     std::vector<char> buf(32);  // 256 bits.
     std::ifstream f;
     f.rdbuf()->pubsetbuf(nullptr, 0);
-    f.open("/dev/urandom", std::ios::binary);
+    f.open(random_device, std::ios::binary);
     if (!f.good()) {
-      throw std::runtime_error("Failed to open /dev/random");
+      throw std::runtime_error("Failed to open " + random_device);
     }
     f.read(&buf[0], buf.size());
     if (f.fail() || f.eof()) {
-      throw std::runtime_error("EOF in /dev/random");
+      throw std::runtime_error("EOF in " + random_device);
     }
     if (static_cast<size_t>(f.gcount()) != buf.size()) {
-      throw std::runtime_error("Short full read from /dev/random");
+      throw std::runtime_error("Short full read from " + random_device);
     }
     TSCALL(Tspi_TPM_StirRandom, stuff.tpm(),
            buf.size(), (BYTE*)&buf[0]);
@@ -249,7 +255,7 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
   TSCALL(Tspi_Policy_AssignToObject, key_policy, key);
 
   // Need to set DER mode for signing.
-  TSCALL(Tspi_SetAttribUint32,key,
+  TSCALL(Tspi_SetAttribUint32, key,
          TSS_TSPATTRIB_KEY_INFO,
          TSS_TSPATTRIB_KEYINFO_SIGSCHEME,
          TSS_SS_RSASSAPKCS1V15_DER);
@@ -282,6 +288,10 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
          TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_KEYSIZE,
          &size);
   std::clog << "Size: " << size << std::endl;
+  if ((UINT32)bits != size) {
+    throw std::runtime_error("Asked for " + std::to_string(bits) + " bit key,"
+                             " but got " + std::to_string(size) + " bit key,");
+  }
 
   // Get keyblob.
   UINT32 blob_size;
@@ -326,13 +336,15 @@ to_bin(const std::string& s)
 }
 
 Key
-parse_keyfile(const std::string &s)
+parse_keyfile(const std::string& s)
 {
   std::istringstream ss(s);
   Key key;
+  int linenum = 0;
   while (!ss.eof()) {
     std::string line;
     getline(ss, line);
+    linenum++;
     if (line.empty() || line[0] == '#') {
       continue;
     }
@@ -348,11 +360,12 @@ parse_keyfile(const std::string &s)
     } else if (cmd == "exp") {
       key.exponent = to_bin(rest);
     } else {
-      throw std::runtime_error("Keyfile format error(line=" + line + ")");
+      throw std::runtime_error("Keyfile format error(line "
+                               + std::to_string(linenum) + ": " + line + ")");
     }
   }
   if (key.modulus.empty() || key.blob.empty() || key.exponent.empty()) {
-    throw std::runtime_error("Keyfile incomplete. TODO: better error.");
+    throw std::runtime_error("Keyfile incomplete. Needs modulus, exponent and blob.");
   }
   return key;
 }
@@ -364,7 +377,6 @@ auth_required(const std::string* srk_pin, const Key& key)
 
   int init_flags =
     TSS_KEY_TYPE_SIGNING
-    | TSS_KEY_SIZE_2048
     | TSS_KEY_VOLATILE
     | TSS_KEY_NO_AUTHORIZATION
     | TSS_KEY_NOT_MIGRATABLE;

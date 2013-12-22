@@ -3,8 +3,17 @@ ACLOCAL_AMFLAGS=-I m4
 SUBDIRS=doc
 
 bin_PROGRAMS=stpm-keygen stpm-sign
-TESTS=stpm-keygen_test stpm-sign_test
+TESTS=stpm-keygen_test stpm-sign_test common_test
 check_PROGRAMS=$(TESTS)
+
+common_test_SOURCES=\
+src/common_test.cc \
+src/common.cc \
+src/tspiwrap.cc \
+src/fake_tspi.cc \
+src/libgtest.cc
+common_test_CXXFLAGS=-I/usr/src/gtest
+common_test_LDFLAGS=
 
 stpm_keygen_SOURCES=\
 src/keygen.cc \

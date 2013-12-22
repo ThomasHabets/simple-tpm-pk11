@@ -27,7 +27,7 @@
 #define TSCALL(x, ...) tscall(#x, [&]()->TSS_RESULT{return x(__VA_ARGS__);})
 
 BEGIN_NAMESPACE(stpm);
-extern TSS_UUID srk_uuid;
+extern const TSS_UUID srk_uuid;
 
 TSS_RESULT tscall(const std::string& name, std::function<TSS_RESULT()> func);
 

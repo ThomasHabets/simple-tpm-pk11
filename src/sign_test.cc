@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "gtest/gtest.h"
+#include<stdexcept>
+#include"gtest/gtest.h"
 
-#include "test_util.h"
+#include"test_util.h"
 
 extern int wrapped_main(int, char**);
 
@@ -114,6 +115,32 @@ TEST(Sign, BadDatafileName)
   EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
   EXPECT_EQ("stpm-sign: Can't open file '/non/existing/file/here/3ht.sn,hsn'\n", s.stderr());
   EXPECT_EQ("", s.stdlog());
+}
+
+TEST(Sign, BadKeyfile)
+{
+  CaptureStreams s;
+  optind = 0;
+  char *argv[] = {
+    (char*)"sign",
+    (char*)"-k",
+    (char*)"testdata/broken.key",
+    (char*)"-f",
+    (char*)"/dev/null",
+    NULL,
+  };
+  bool threw = false;
+  try {
+    wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv);
+  } catch (const std::runtime_error& e) {
+    EXPECT_EQ("Keyfile format error(line 2: typo 010001)",
+              std::string(e.what()));
+    EXPECT_EQ("", s.stdlog());
+    EXPECT_EQ("", s.stdout());
+    EXPECT_EQ("", s.stderr());
+    threw = true;
+  }
+  EXPECT_TRUE(threw);
 }
 
 TEST(Sign, OK)

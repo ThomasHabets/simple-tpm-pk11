@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 // Key generator main().
+#include<cstring>
 #include<cstdlib>
 #include<fstream>
 #include<iostream>
@@ -84,7 +85,8 @@ wrapped_main(int argc, char **argv)
                                 bits);
   std::ofstream fo(output);
   if (!fo) {
-    std::cerr << "Unable to open '" << output << "'" << std::endl;
+    std::cerr << "Unable to open '" << output << "': "
+              << strerror(errno) << std::endl;
     return 1;
   }
   fo << "# Some sort of key\n"

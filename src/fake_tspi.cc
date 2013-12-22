@@ -18,6 +18,10 @@
  */
 #include"tss/tspi.h"
 
+namespace fake_tspi_data {
+  int keysize = 2048;
+}
+
 TSPICALL
 Tspi_Context_Create(TSS_HCONTEXT* phContext)
 {
@@ -43,8 +47,9 @@ Tspi_GetAttribUint32(TSS_HOBJECT hObject,
   case TSS_TSPATTRIB_KEYINFO_AUTHDATAUSAGE:
     *pulAttrib = 0;
     break;
-  default:
-    *pulAttrib = 123;
+  case TSS_TSPATTRIB_KEYINFO_RSA_KEYSIZE:
+    *pulAttrib = fake_tspi_data::keysize;
+    break;
   }
   return TSS_SUCCESS;
 }

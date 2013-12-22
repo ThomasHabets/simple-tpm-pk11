@@ -17,6 +17,10 @@
 
 #include "test_util.h"
 
+namespace fake_tspi_data {
+  extern int keysize;
+}
+
 extern int wrapped_main(int, char**);
 
 TEST(Usage, NoOpts)
@@ -76,8 +80,9 @@ TEST(Keygen, BadOutputName)
   };
   EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
   EXPECT_EQ("", s.stdout());
-  EXPECT_EQ("Unable to open '/non/existing/file/here/3ht.sn,hsn'\n", s.stderr());
-  EXPECT_EQ("Modulus size: 10\nExponent size: 10\nSize: 123\nBlob size: 10\n",
+  EXPECT_EQ("Unable to open '/non/existing/file/here/3ht.sn,hsn':"
+            " No such file or directory\n", s.stderr());
+  EXPECT_EQ("Modulus size: 10\nExponent size: 10\nSize: 2048\nBlob size: 10\n",
             s.stdlog());
 }
 
@@ -94,8 +99,45 @@ TEST(Keygen, OK)
   EXPECT_EQ(0, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
   EXPECT_EQ("", s.stdout());
   EXPECT_EQ("", s.stderr());
-  EXPECT_EQ("Modulus size: 10\nExponent size: 10\nSize: 123\nBlob size: 10\n",
+  EXPECT_EQ("Modulus size: 10\nExponent size: 10\nSize: 2048\nBlob size: 10\n",
             s.stdlog());
+}
+
+TEST(Keygen, SmallerKey)
+{
+  CaptureStreams s;
+  optind = 0;
+  char *argv[] = {
+    (char*)"keygen",
+    (char*)"-b",
+    (char*)"1024",
+    (char*)"-o",
+    (char*)"/dev/null",
+    NULL,
+  };
+  fake_tspi_data::keysize = 1024;
+  EXPECT_EQ(0, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
+  EXPECT_EQ("", s.stdout());
+  EXPECT_EQ("", s.stderr());
+  EXPECT_EQ("Modulus size: 10\nExponent size: 10\nSize: 1024\nBlob size: 10\n",
+            s.stdlog());
+}
+
+TEST(Keygen, WrongTPMKeySize)
+{
+  CaptureStreams s;
+  optind = 0;
+  char *argv[] = {
+    (char*)"keygen",
+    (char*)"-b",
+    (char*)"1024",
+    (char*)"-o",
+    (char*)"/dev/null",
+    NULL,
+  };
+  fake_tspi_data::keysize = 2048;
+  EXPECT_THROW(wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv),
+               std::exception);
 }
 /* ---- Emacs Variables ----
  * Local Variables:

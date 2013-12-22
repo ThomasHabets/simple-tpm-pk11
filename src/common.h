@@ -1,4 +1,4 @@
-/**
+/** -*- c++ -*-
  * Copyright 2013 Google Inc. All Rights Reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -37,7 +37,10 @@ public:
   const int tspi_error;
 
 private:
-  std::string extra_;
+  static std::string code_to_extra(int);
+  static std::string code_to_string(int);
+
+  const std::string extra_;
 };
 
 // TPM key parts in binary.
@@ -55,11 +58,9 @@ struct SoftwareKey {
 };
 
 
-// Turn trousers error code into useful string.
-std::string parseError(int code);
-
-// Convert binary to hex.
-std::string to_hex(const std::string&);
+// Convert binary to hex and back.
+std::string to_hex(const std::string& s);
+std::string to_bin(const std::string& s);
 
 // Parse a keyfile into a struct. Does not use the TPM.
 Key parse_keyfile(const std::string&);
@@ -93,7 +94,7 @@ std::ostream& operator<<(std::ostream&, struct stpm::Key&);
 #endif
 /* ---- Emacs Variables ----
  * Local Variables:
- * c-basic-offset: 8
+ * c-basic-offset: 2
  * indent-tabs-mode: nil
  * End:
  */
