@@ -103,6 +103,23 @@ TEST(Keygen, OK)
             s.stdlog());
 }
 
+TEST(Keygen, SWKeyOK)
+{
+  CaptureStreams s;
+  optind = 0;
+  char *argv[] = {
+    (char*)"keygen",
+    (char*)"-S",
+    (char*)"-o",
+    (char*)"/dev/null",
+    NULL,
+  };
+  EXPECT_EQ(0, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
+  EXPECT_EQ("", s.stdout());
+  EXPECT_EQ("", s.stderr());
+  EXPECT_EQ("", s.stdlog());
+}
+
 TEST(Keygen, SmallerKey)
 {
   CaptureStreams s;

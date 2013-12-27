@@ -70,6 +70,9 @@ Key parse_keyfile(const std::string&);
 Key generate_key(const std::string* srk_pin, const std::string* key_pin,
                  int bits);
 
+// Generate an RSA key in software.
+SoftwareKey generate_software_key(int bits);
+
 // Generate a signing key inside the TPM.
 // If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
 Key wrap_key(const std::string* srk_pin, const std::string* key_pin,

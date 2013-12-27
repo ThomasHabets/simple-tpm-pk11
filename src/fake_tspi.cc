@@ -168,6 +168,33 @@ Tspi_Hash_UpdateHashValue(TSS_HHASH hHash,
 {
   return TSS_SUCCESS;
 }
+
+TSPICALL
+Tspi_Key_GetPubKey(TSS_HKEY hKey,
+                   UINT32*  pulPubKeyLength,
+                   BYTE**   prgbPubKey)
+{
+  return TSS_SUCCESS;
+}
+
+TSPICALL
+Tspi_SetAttribData(TSS_HOBJECT hObject,
+                   TSS_FLAG    attribFlag,
+                   TSS_FLAG    subFlag,
+                   UINT32      ulAttribDataSize,
+                   BYTE*       rgbAttribData)
+{
+  return TSS_SUCCESS;
+}
+
+TSPICALL
+Tspi_Key_WrapKey(TSS_HKEY  hKey,
+                 TSS_HKEY  hWrappingKey,
+                 TSS_HPCRS hPcrComposite)
+{
+  return TSS_SUCCESS;
+}
+
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 2

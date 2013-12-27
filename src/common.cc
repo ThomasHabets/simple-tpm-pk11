@@ -25,6 +25,7 @@
 #include<string>
 #include<vector>
 
+#include"openssl/rsa.h"
 #include"tss/tspi.h"
 #include"trousers/trousers.h"
 
@@ -105,6 +106,17 @@ TSPIException::code_to_extra(int code)
 }
 
 std::string
+bn2string(const BIGNUM* bn)
+{
+  std::vector<unsigned char> buf(BN_num_bytes(bn));
+  unsigned int size;
+  if (0 >= (size = BN_bn2bin(bn, &buf[0]))) {
+    throw std::runtime_error("Broken BIGNUM sent to BN_bn2bin.");
+  }
+  return std::string(buf.begin(), buf.end());
+}
+
+std::string
 xctime()
 {
   time_t t;
@@ -152,6 +164,23 @@ keysize_flag(int bits) {
   throw std::runtime_error("Unknown key size: " + std::to_string(bits) + "bit");
 }
 
+SoftwareKey
+generate_software_key(int bits)
+{
+  // TODO (important): seed PRNG.
+  RSA *rsa = RSA_new();
+  BIGNUM *f4 = BN_new();
+  BN_set_word(f4, RSA_F4);
+  if (!RSA_generate_key_ex(rsa, bits, f4, NULL)) {
+    throw std::runtime_error("RSA_generate_key_ex failed");
+  }
+  SoftwareKey swkey;
+  swkey.modulus = bn2string(rsa->n);
+  swkey.key = bn2string(rsa->p);
+  swkey.exponent = bn2string(rsa->e);
+  return swkey;
+}
+
 // TODO: Complete this implementation.
 Key
 wrap_key(const std::string* srk_pin, const std::string* key_pin,
@@ -165,24 +194,48 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
     | TSS_KEY_SIZE_2048
     | TSS_KEY_VOLATILE
     | TSS_KEY_NO_AUTHORIZATION
-    | TSS_KEY_NOT_MIGRATABLE;
+    | TSS_KEY_MIGRATABLE;  // Wrapped keys must be migratable. :-(
 
   TSS_HKEY key;
   TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
          TSS_OBJECT_TYPE_RSAKEY, init_flags, &key);
   TSS_HPOLICY key_policy;
   TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
-         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &key_policy);
+         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_MIGRATION, &key_policy);
 
-  // Set modulus
-  // TODO: Set modulus.
+  // Set PIN.
+  {
+    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
+    int wks_size = sizeof(wks);
+    TSCALL(Tspi_Policy_SetSecret, key_policy,
+           TSS_SECRET_MODE_SHA1, wks_size, wks);
+  }
+  TSCALL(Tspi_Policy_AssignToObject, key_policy, key);
 
-  // set private
+  // Load SRK public key.
+  {
+    UINT32 pubKeySize;
+    BYTE *pubKey;
+    TSCALL(Tspi_Key_GetPubKey, stuff.srk(), &pubKeySize, &pubKey);
+  }
+
+  // Need to set DER mode for signing.
+  TSCALL(Tspi_SetAttribUint32, key,
+         TSS_TSPATTRIB_KEY_INFO,
+         TSS_TSPATTRIB_KEYINFO_SIGSCHEME,
+         TSS_SS_RSASSAPKCS1V15_DER);
+
+  // Set private key.
   TSCALL(Tspi_SetAttribData, key, TSS_TSPATTRIB_KEY_BLOB,
          TSS_TSPATTRIB_KEYBLOB_PRIVATE_KEY,
          swkey.key.size(), (BYTE*)swkey.key.data());
 
-  // Create key
+  // Set modulus.
+  TSCALL(Tspi_SetAttribData, key,
+         TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_MODULUS,
+         swkey.modulus.size(), (BYTE*)swkey.modulus.data());
+
+  // Wrap key.
   TSCALL(Tspi_Key_WrapKey, key, stuff.srk(), 0);
 
   Key ret;
@@ -195,7 +248,7 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
   TSCALL(Tspi_GetAttribData, key,
          TSS_TSPATTRIB_KEY_BLOB, TSS_TSPATTRIB_KEYBLOB_BLOB,
          &blob_size, &blob_blob);
-  ret.blob = std::string{std::string(blob_blob, blob_blob+blob_size)};
+  ret.blob = std::string(blob_blob, blob_blob+blob_size);
   return ret;
 }
 
@@ -389,6 +442,7 @@ auth_required(const std::string* srk_pin, const Key& key)
          key.blob.size(), (BYTE*)key.blob.data(), &hkey);
 
   UINT32 auth;
+  // TODO: AUTHUSAGE or AUTHDATAUSAGE?
   TSCALL(Tspi_GetAttribUint32, hkey,
          TSS_TSPATTRIB_KEY_INFO, TSS_TSPATTRIB_KEYINFO_AUTHDATAUSAGE,
          &auth);

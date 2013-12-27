@@ -27,7 +27,7 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: keygen [ -hsp ] [ -b <bits> ] -o <output file>\n";
+  std::cout << "Usage: keygen [ -hsSp ] [ -b <bits> ] -o <output file>\n";
   return rc;
 }
 END_NAMESPACE();
@@ -40,8 +40,9 @@ wrapped_main(int argc, char **argv)
   bool set_srk_pin{false};
   bool set_key_pin{false};
   int bits = 2048;
+  bool software{false};
 
-  while (EOF != (c = getopt(argc, argv, "b:ho:sp"))) {
+  while (EOF != (c = getopt(argc, argv, "b:ho:sSp"))) {
     switch (c) {
     case 'b':
       bits = std::stoi(optarg);
@@ -50,6 +51,9 @@ wrapped_main(int argc, char **argv)
       return usage(0);
     case 's':
       set_srk_pin = true;
+      break;
+    case 'S':
+      software = true;
       break;
     case 'p':
       set_key_pin = true;
@@ -79,17 +83,25 @@ wrapped_main(int argc, char **argv)
     std::cerr << "Enter key PIN: " << std::flush;
     getline(std::cin, key_pin);
   }
-
-  auto key = stpm::generate_key(set_srk_pin ? &srk_pin : NULL,
-                                set_key_pin ? &key_pin : NULL,
-                                bits);
+  stpm::Key key;
+  if (software) {
+    const auto sw = stpm::generate_software_key(bits);
+    key = stpm::wrap_key(set_srk_pin ? &srk_pin : nullptr,
+                         set_key_pin ? &key_pin : nullptr,
+                         sw);
+  } else {
+    key = stpm::generate_key(set_srk_pin ? &srk_pin : nullptr,
+                             set_key_pin ? &key_pin : nullptr,
+                             bits);
+  }
   std::ofstream fo(output);
   if (!fo) {
     std::cerr << "Unable to open '" << output << "': "
               << strerror(errno) << std::endl;
     return 1;
   }
-  fo << "# Some sort of key\n"
+  fo << "# Some sort of key.\n"
+     << "# Key was generated in " << (software ? "software.\n" : "hardware.\n")
      << "exp " << stpm::to_hex(key.exponent) << std::endl
      << "mod " << stpm::to_hex(key.modulus) << std::endl
      << "blob " << stpm::to_hex(key.blob) << std::endl;
