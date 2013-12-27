@@ -26,6 +26,7 @@
 #include<vector>
 
 #include"openssl/rsa.h"
+#include"openssl/rand.h"
 #include"tss/tspi.h"
 #include"trousers/trousers.h"
 
@@ -44,6 +45,7 @@ operator<<(std::ostream& o, struct stpm::Key& key)
 
 BEGIN_NAMESPACE(stpm);
 const std::string random_device = "/dev/urandom";
+const int num_random_bytes = 32; // 256 bits.
 const char* env_log_stderr = "SIMPLE_TPM_PK11_LOG_STDERR";
 const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
@@ -103,6 +105,26 @@ TSPIException::code_to_extra(int code)
       "  It could fail to start because it's not finding a device /dev/tpm*.";
   }
   return "";
+}
+
+std::string
+xrandom(int bytes)
+{
+  std::vector<char> buf(bytes);
+  std::ifstream f;
+  f.rdbuf()->pubsetbuf(nullptr, 0);
+  f.open(random_device, std::ios::binary);
+  if (!f.good()) {
+    throw std::runtime_error("Failed to open " + random_device);
+  }
+  f.read(&buf[0], buf.size());
+  if (f.fail() || f.eof()) {
+    throw std::runtime_error("EOF in " + random_device);
+  }
+  if (static_cast<size_t>(f.gcount()) != buf.size()) {
+    throw std::runtime_error("Short full read from " + random_device);
+  }
+  return std::string(buf.begin(), buf.end());
 }
 
 std::string
@@ -167,7 +189,12 @@ keysize_flag(int bits) {
 SoftwareKey
 generate_software_key(int bits)
 {
-  // TODO (important): seed PRNG.
+  const std::string entropy = xrandom(num_random_bytes);
+  RAND_seed(entropy.data(), entropy.size());
+  if (!RAND_status()) {
+    throw std::runtime_error("OpenSSL PRNG wants more entropy");
+  }
+
   RSA *rsa = RSA_new();
   BIGNUM *f4 = BN_new();
   BN_set_word(f4, RSA_F4);
@@ -257,22 +284,9 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
   TPMStuff stuff{srk_pin};
 
   { // Get some random data and seed the TPM with it.
-    std::vector<char> buf(32);  // 256 bits.
-    std::ifstream f;
-    f.rdbuf()->pubsetbuf(nullptr, 0);
-    f.open(random_device, std::ios::binary);
-    if (!f.good()) {
-      throw std::runtime_error("Failed to open " + random_device);
-    }
-    f.read(&buf[0], buf.size());
-    if (f.fail() || f.eof()) {
-      throw std::runtime_error("EOF in " + random_device);
-    }
-    if (static_cast<size_t>(f.gcount()) != buf.size()) {
-      throw std::runtime_error("Short full read from " + random_device);
-    }
+    const std::string entropy = xrandom(num_random_bytes);
     TSCALL(Tspi_TPM_StirRandom, stuff.tpm(),
-           buf.size(), (BYTE*)&buf[0]);
+           entropy.size(), (BYTE*)entropy.data());
   }
 
   // === Set up key object ===
