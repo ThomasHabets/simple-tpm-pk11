@@ -218,7 +218,7 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
   // === Set up key object ===
   int init_flags =
     TSS_KEY_TYPE_SIGNING
-    | TSS_KEY_SIZE_2048
+    | keysize_flag(swkey.modulus.size() * 8)
     | TSS_KEY_VOLATILE
     | TSS_KEY_NO_AUTHORIZATION
     | TSS_KEY_MIGRATABLE;  // Wrapped keys must be migratable. :-(
