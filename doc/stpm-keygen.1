@@ -25,6 +25,15 @@ Ask for the SRK password interactively\&. By default the
 access token that must be presented for the TPM to perform any
 operation that involves the TPM, and an actual secret password
 is usually not required or useful\&.
+.IP "\-S"
+Generate key in software instead of hardware\&.
+The choice between generating the key in software and hardware is
+not an obvious one\&. It\(cq\&s hard to verify the quality of keys generated
+in hardware (e\&.g\&. bugs or backdoors), but software keys have existed
+in RAM at some point\&. And because software generated keys have to be generated as
+migratable keys, they can be extracted by someone who knows the TPM owner
+password\&. The recommended choice is to generate in hardware, which
+is also the default\&.
 
 .PP 
 .SH "EXAMPLES"
@@ -54,6 +63,8 @@ read from the terminal without echo\&.
 .PP 
 .SH "SEE ALSO"
 \fBsimple\-tpm\-pk11(7)\fP, \fBstpm\-sign(1)\fP\&.
+.PP 
+http://blog\&.habets\&.se/2013/11/Should\-I\-generate\-my\-keys\-in\-software\-or\-hardware
 .PP 
 .SH "AUTHOR"
 Simple\-TPM\-PK11 was written By Thomas Habets <habets@google\&.com>

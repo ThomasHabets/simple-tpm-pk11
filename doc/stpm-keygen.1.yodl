@@ -21,6 +21,14 @@ startdit()
         access token that must be presented for the TPM to perform any
         operation that involves the TPM, and an actual secret password
         is usually not required or useful.
+    dit(-S) Generate key in software instead of hardware.
+        The choice between generating the key in software and hardware is
+        not an obvious one. It's hard to verify the quality of keys generated
+        in hardware (e.g. bugs or backdoors), but software keys have existed
+        in RAM at some point. And because software generated keys have to be generated as
+        migratable keys, they can be extracted by someone who knows the TPM owner
+        password. The recommended choice is to generate in hardware, which
+        is also the default.
 enddit()
  
 manpagesection(EXAMPLES)
@@ -50,6 +58,8 @@ manpagebugs()
 
 manpageseealso()
     bf(simple-tpm-pk11(7)), bf(stpm-sign(1)).
+
+    http://blog.habets.se/2013/11/Should-I-generate-my-keys-in-software-or-hardware
 
 manpageauthor()
     Simple-TPM-PK11 was written By Thomas Habets <habets@google.com>
