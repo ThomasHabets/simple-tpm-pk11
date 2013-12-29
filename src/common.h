@@ -62,6 +62,9 @@ struct SoftwareKey {
 std::string to_hex(const std::string& s);
 std::string to_bin(const std::string& s);
 
+// Like basename(3), but with std::string.
+std::string xbasename(const std::string& fullpath);
+
 // Parse a keyfile into a struct. Does not use the TPM.
 Key parse_keyfile(const std::string&);
 

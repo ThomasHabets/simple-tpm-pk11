@@ -373,6 +373,16 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
 }
 
 std::string
+xbasename(const std::string& fullpath)
+{
+  const size_t s = fullpath.size();
+  std::vector<char> buf(s + 1);
+  memcpy(&buf[0], fullpath.data(), s);
+  const std::string ret{basename(&buf[0])};
+  return ret;
+}
+
+std::string
 to_hex(const std::string& s)
 {
   std::stringstream ss;

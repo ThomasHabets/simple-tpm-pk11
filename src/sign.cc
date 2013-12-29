@@ -27,11 +27,18 @@
 #include"common.h"
 #include"internal.h"
 
+extern std::string argv0base;
+
+
 BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: sign [ -hs ] -k <keyfile> -f <data>" << std::endl;
+  std::cout << "Usage: " << argv0base << " [ -hs ] -f <data> -k <keyfile>\n"
+            << "    -f <data file>    File to sign.\n"
+            << "    -h, --help        Show this help text.\n"
+            << "    -k <keyfile>      File containing key data.\n"
+            << "    -s                Prompt for SRK password/PIN.\n";
   return rc;
 }
 END_NAMESPACE();

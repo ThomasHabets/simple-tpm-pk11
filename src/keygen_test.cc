@@ -17,6 +17,8 @@
 
 #include"test_util.h"
 
+extern std::string argv0base;
+
 namespace fake_tspi_data {
   extern int keysize;
 }
@@ -25,6 +27,7 @@ extern int wrapped_main(int, char**);
 
 TEST(Usage, NoOpts)
 {
+  argv0base = "foobinary";
   CaptureStreams s;
   optind = 0;
   char *argv[] = {
@@ -33,7 +36,7 @@ TEST(Usage, NoOpts)
   };
   EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
   EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
-  EXPECT_EQ("stpm-keygen: Empty output file name.\n", s.stderr());
+  EXPECT_EQ("foobinary: Empty output file name.\n", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }
 
@@ -54,6 +57,7 @@ TEST(Usage, HelpOpts)
 
 TEST(Keygen, EmptyOutputName)
 {
+  argv0base = "foobinary";
   CaptureStreams s;
   optind = 0;
   char *argv[] = {
@@ -64,7 +68,7 @@ TEST(Keygen, EmptyOutputName)
   };
   EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
   EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
-  EXPECT_EQ("stpm-keygen: Empty output file name.\n", s.stderr());
+  EXPECT_EQ("foobinary: Empty output file name.\n", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }
 

@@ -23,11 +23,19 @@
 #include"common.h"
 #include"internal.h"
 
+extern std::string argv0base;
+
 BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: keygen [ -hsSp ] [ -b <bits> ] -o <output file>\n";
+  std::cout << "Usage: " << argv0base << " [ -hsSp ] [ -b <bits> ] -o <output file>\n"
+            << "    -b <bits>         Key size in bits. TPM chips tend to support up to 2048.\n"
+            << "    -h, --help        Show this help text.\n"
+            << "    -o <output file>  Output file to store the key information in.\n"
+            << "    -p                Set a password/PIN on the generated key.\n"
+            << "    -s                Ask for SRK password/PIN. Default is Well Known Secret.\n"
+            << "    -S                Generate the key in software (see manpage).\n";
   return rc;
 }
 END_NAMESPACE();
@@ -66,7 +74,7 @@ wrapped_main(int argc, char **argv)
     }
   }
   if (output.empty()) {
-    std::cerr << "stpm-keygen: Empty output file name." << std::endl;
+    std::cerr << argv0base << ": Empty output file name." << std::endl;
     return usage(1);
   }
 

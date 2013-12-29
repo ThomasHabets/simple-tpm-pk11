@@ -13,5 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include<string>
+
 #include"/usr/src/gtest/src/gtest_main.cc"
 #include"/usr/src/gtest/src/gtest-all.cc"
+
+std::string argv0base = "test-binary";

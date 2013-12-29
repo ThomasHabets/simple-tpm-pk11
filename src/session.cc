@@ -36,8 +36,9 @@ BEGIN_NAMESPACE();
 std::string
 xdirname(const std::string& relative)
 {
-  std::vector<char> buf(relative.size()+1);
-  memcpy(&buf[0], relative.data(), relative.size());
+  const size_t s = relative.size();
+  std::vector<char> buf(s + 1);
+  memcpy(&buf[0], relative.data(), s);
   const std::string ret{dirname(&buf[0])};
   if (ret == "/") {
     return ret;
