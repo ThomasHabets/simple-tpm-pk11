@@ -53,7 +53,6 @@ Config::Config(const std::string& fn)
    set_srk_pin_(false),
    set_key_pin_(false),
    debug_(false)
-
 {
   std::ifstream f{fn};
   if (!f) {
@@ -65,6 +64,10 @@ Config::Config(const std::string& fn)
     if (!logfile_) {
       throw std::runtime_error("Unable to open logfile " + logfilename_);
     }
+  }
+  if (keyfile_.empty()) {
+    // TODO: should use fqdn?
+    keyfile_ = xdirname(configfile_) + stpm::xgethostname() + ".key";
   }
 }
 

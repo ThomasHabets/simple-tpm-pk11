@@ -383,6 +383,16 @@ xbasename(const std::string& fullpath)
 }
 
 std::string
+xgethostname()
+{
+    std::vector<char> buf(1024);
+    if (gethostname(&buf[0], buf.size() - 1)) {
+      throw std::runtime_error(std::string("gethostbyname(): ") + strerror(errno));
+    }
+    return &buf[0];
+}
+
+std::string
 to_hex(const std::string& s)
 {
   std::stringstream ss;

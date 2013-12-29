@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+// Test the PKCS#11 module purely through the C API.
+
 #include"gtest/gtest.h"
 #include<opencryptoki/pkcs11.h>
 
+#include"common.h"
 #include"test_util.h"
 
 namespace fake_tspi_data {
@@ -67,6 +70,7 @@ TEST_F(PK11Test, NoConfig)
 TEST_F(PK11Test, EmptyConfig)
 {
   setenv("SIMPLE_TPM_PK11_CONFIG", "/dev/null", 1);
+  setenv("SIMPLE_TPM_PK11_LOG_STDERR", "on", 1);
   CK_SESSION_HANDLE s;
   ASSERT_EQ(CKR_OK, func_->C_OpenSession(0, 0, nullptr, nullptr, &s));
 
@@ -74,7 +78,7 @@ TEST_F(PK11Test, EmptyConfig)
     CKM_RSA_PKCS, NULL_PTR, 0
   };
 
-  CK_OBJECT_HANDLE key;
+  CK_OBJECT_HANDLE key = 0;
   // TODO: Get first key.
 
   CK_BYTE data[35];
@@ -82,6 +86,7 @@ TEST_F(PK11Test, EmptyConfig)
   CK_ULONG slen;
   ASSERT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
   ASSERT_EQ(CKR_GENERAL_ERROR, func_->C_Sign(s, data, sizeof(data), signature, &slen));
+  ASSERT_NE(cs.stderr().find("/dev/" + stpm::xgethostname() + ".key"), std::string::npos);
 }
 
 TEST_F(PK11Test, MissingKeyfile)
@@ -95,7 +100,7 @@ TEST_F(PK11Test, MissingKeyfile)
     CKM_RSA_PKCS, NULL_PTR, 0
   };
 
-  CK_OBJECT_HANDLE key;
+  CK_OBJECT_HANDLE key = 0;
   // TODO: Get first key.
 
   CK_BYTE data[35];
@@ -117,7 +122,7 @@ TEST_F(PK11Test, BadKeyfile)
     CKM_RSA_PKCS, NULL_PTR, 0
   };
 
-  CK_OBJECT_HANDLE key;
+  CK_OBJECT_HANDLE key = 0;
   // TODO: Get first key.
 
   CK_BYTE data[35];
@@ -139,7 +144,7 @@ TEST_F(PK11Test, AbsKeyfile)
     CKM_RSA_PKCS, NULL_PTR, 0
   };
 
-  CK_OBJECT_HANDLE key;
+  CK_OBJECT_HANDLE key = 0;
   // TODO: Get first key.
 
   CK_BYTE data[35];
@@ -160,7 +165,7 @@ TEST_F(PK11Test, Sign)
     CKM_RSA_PKCS, NULL_PTR, 0
   };
 
-  CK_OBJECT_HANDLE key;
+  CK_OBJECT_HANDLE key = 0;
   // TODO: Get first key.
 
   CK_BYTE data[35];
