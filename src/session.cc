@@ -24,7 +24,7 @@
 #include<sstream>
 #include<vector>
 
-#include <openssl/bn.h>
+#include<openssl/bn.h>
 
 #include"common.h"
 #include"internal.h"
