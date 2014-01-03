@@ -108,7 +108,7 @@ TEST_F(PK11Test, MissingKeyfile)
   CK_ULONG slen;
   ASSERT_EQ(CKR_OK, func_->C_SignInit(s, &mech, key));
   ASSERT_EQ(CKR_GENERAL_ERROR, func_->C_Sign(s, data, sizeof(data), signature, &slen));
-  EXPECT_NE(std::string::npos, cs.stderr().find("Failed to open key file 'testdata/missing-file'"));
+  EXPECT_NE(std::string::npos, cs.stderr().find("Failed to read key file 'testdata/missing-file'"));
 }
 
 TEST_F(PK11Test, BadKeyfile)

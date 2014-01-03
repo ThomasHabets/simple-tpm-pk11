@@ -93,9 +93,10 @@ TEST(Sign, BadKeyfileName)
     (char*)"/dev/null",
     NULL,
   };
-  EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
-  EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
-  EXPECT_EQ("stpm-sign: Can't open keyfile '/non/existing/file/here/3ht.sn,hsn'\n", s.stderr());
+  EXPECT_THROW(wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv),
+               std::runtime_error);
+  EXPECT_EQ("", s.stdout());
+  EXPECT_EQ("", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }
 
@@ -111,9 +112,11 @@ TEST(Sign, BadDatafileName)
     (char*)"/non/existing/file/here/3ht.sn,hsn",
     NULL,
   };
-  EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
-  EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
-  EXPECT_EQ("stpm-sign: Can't open file '/non/existing/file/here/3ht.sn,hsn'\n", s.stderr());
+  EXPECT_THROW(wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv),
+               std::runtime_error);
+  EXPECT_EQ("", s.stdlog());
+  EXPECT_EQ("", s.stdout());
+  EXPECT_EQ("", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }
 

@@ -230,13 +230,13 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
       pInfo->flags = 0;
       auto config = get_config();
 
-      std::ifstream kf{config.keyfile_};
-      if (!kf) {
+      std::string kfs;
+      try {
+        kfs = stpm::slurp_file(config.keyfile_);
+      } catch (...) {
         throw PK11Error(CKR_GENERAL_ERROR,
-                        "Failed to open key file '" + config.keyfile_ + "'");
+                        "Failed to read key file '" + config.keyfile_ + "'");
       }
-      const std::string kfs{std::istreambuf_iterator<char>(kf),
-                            std::istreambuf_iterator<char>()};
       const stpm::Key key = stpm::parse_keyfile(kfs);
 
       if (stpm::auth_required(config.set_srk_pin_ ? &config.srk_pin_ : NULL,

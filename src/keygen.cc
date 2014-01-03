@@ -80,16 +80,12 @@ wrapped_main(int argc, char **argv)
 
   std::string srk_pin;
   if (set_srk_pin) {
-    // TODO: read from terminal without echo.
-    std::cerr << "Enter SRK PIN: " << std::flush;
-    getline(std::cin, srk_pin);
+    srk_pin = stpm::xgetpass("Enter SRK PIN");
   }
 
   std::string key_pin;
   if (set_key_pin) {
-    // TODO: read from terminal without echo.
-    std::cerr << "Enter key PIN: " << std::flush;
-    getline(std::cin, key_pin);
+    key_pin = stpm::xgetpass("Enter key PIN");
   }
   stpm::Key key;
   if (software) {

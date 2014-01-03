@@ -108,6 +108,10 @@ std::string slurp_file(const std::string& fn);
 
 void do_log(std::ostream* o, const std::string& msg);
 
+// This function assumes std::cin is connected to STDIN_FILENO,
+// and that std::cout and std::cin are attached to "the terminal".
+std::string xgetpass(const std::string& prompt);
+
 void set_policy_secret(TSS_HPOLICY policy, const std::string* pin);
 }  // namespace stpm
 

@@ -147,13 +147,13 @@ void
 Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
                            CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
 {
-  std::ifstream kf{config_.keyfile_};
-  if (!kf) {
+  std::string kfs;
+  try {
+    kfs = stpm::slurp_file(config_.keyfile_);
+  } catch (...) {
     throw PK11Error(CKR_GENERAL_ERROR,
-                    "Failed to open key file '" + config_.keyfile_ + "'");
+                    "Failed to read key file '" + config_.keyfile_ + "'");
   }
-  const std::string kfs{std::istreambuf_iterator<char>(kf),
-                        std::istreambuf_iterator<char>()};
   const stpm::Key key = stpm::parse_keyfile(kfs);
 
 
@@ -207,13 +207,13 @@ void
 Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
               CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen)
 {
-  std::ifstream kf(config_.keyfile_);
-  if (!kf) {
+  std::string kfs;
+  try {
+    kfs = stpm::slurp_file(config_.keyfile_);
+  } catch (...) {
     throw PK11Error(CKR_GENERAL_ERROR,
-                    "Failed to open key file '" + config_.keyfile_ + "'");
+                    "Failed to read key file '" + config_.keyfile_ + "'");
   }
-  const std::string kfs{std::istreambuf_iterator<char>(kf),
-                        std::istreambuf_iterator<char>()};
   const stpm::Key key = stpm::parse_keyfile(kfs);
   const std::string data{pData, pData+usDataLen};
   const std::string signature{

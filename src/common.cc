@@ -23,6 +23,8 @@
 #include<sstream>
 #include<stdexcept>
 #include<string>
+#include<termios.h>
+#include<unistd.h>
 #include<vector>
 
 #include"openssl/rsa.h"
@@ -57,6 +59,34 @@ const std::string random_device = "/dev/urandom";
 const int num_random_bytes = 32; // 256 bits.
 const char* env_log_stderr = "SIMPLE_TPM_PK11_LOG_STDERR";
 const TSS_UUID srk_uuid = TSS_UUID_SRK;
+
+std::string
+xgetpass(const std::string& prompt)
+{
+  const int fd = STDIN_FILENO;
+  std::cout << prompt << ": " << std::flush;
+  std::string line;
+  if (!isatty(fd)) {
+    getline(std::cin, line);
+  } else {
+    struct termios old;
+    if (tcgetattr(fd, &old)) {
+      throw std::runtime_error(std::string("tcgetattr(stdin): ") + strerror(errno));
+    }
+
+    struct termios ti = old;
+    ti.c_lflag &= ~ECHO;
+    if (tcsetattr(fd, TCSAFLUSH, &ti)) {
+      throw std::runtime_error(std::string("tcsetattr(stdin, TCSAFLUSH, no echo): ") + strerror(errno));
+    }
+    getline(std::cin, line);
+    if (tcsetattr(fd, TCSAFLUSH, &old)) {
+      throw std::runtime_error(std::string("tcsetattr(stdin, TCSAFLUSH, old): ") + strerror(errno));
+    }
+  }
+  std::cout << std::endl;
+  return line;
+}
 
 // Wrap Tspi_* calls, checking return value and throwing exception.
 // TODO: Adding debug logging.
@@ -501,7 +531,7 @@ slurp_file(const std::string& fn)
 {
   std::ifstream f(fn);
   if (!f) {
-    throw std::runtime_error("Can't open file " + fn);
+    throw std::runtime_error("Can't open file '" + fn + "'");
   }
   return std::string{std::istreambuf_iterator<char>(f),
                      std::istreambuf_iterator<char>()};
