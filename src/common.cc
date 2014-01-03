@@ -35,11 +35,20 @@
 #include"internal.h"
 
 std::ostream&
-operator<<(std::ostream& o, struct stpm::Key& key)
+operator<<(std::ostream& o, const struct stpm::Key& key)
 {
   o << "mod=" << stpm::to_hex(key.modulus)
     << ",exp=" << stpm::to_hex(key.exponent)
     << ",blob=" << stpm::to_hex(key.blob);
+  return o;
+}
+
+std::ostream&
+operator<<(std::ostream& o, const struct stpm::SoftwareKey& key)
+{
+  o << "mod=" << stpm::to_hex(key.modulus)
+    << ",exp=" << stpm::to_hex(key.exponent)
+    << ",key=" << stpm::to_hex(key.key);
   return o;
 }
 
@@ -231,12 +240,7 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_MIGRATION, &key_policy);
 
   // Set PIN.
-  {
-    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-    int wks_size = sizeof(wks);
-    TSCALL(Tspi_Policy_SetSecret, key_policy,
-           TSS_SECRET_MODE_SHA1, wks_size, wks);
-  }
+  set_policy_secret(key_policy, key_pin);
   TSCALL(Tspi_Policy_AssignToObject, key_policy, key);
 
   // Load SRK public key.
@@ -309,17 +313,7 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
   TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &key_policy);
 
-  if (key_pin) {
-    TSCALL(Tspi_Policy_SetSecret, key_policy,
-           TSS_SECRET_MODE_PLAIN,
-           key_pin->size(),
-           (BYTE*)key_pin->data());
-  } else {
-    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-    int wks_size = sizeof(wks);
-    TSCALL(Tspi_Policy_SetSecret, key_policy,
-           TSS_SECRET_MODE_SHA1, wks_size, wks);
-  }
+  set_policy_secret(key_policy, key_pin);
   TSCALL(Tspi_Policy_AssignToObject, key_policy, key);
 
   // Need to set DER mode for signing.
@@ -340,6 +334,17 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
          &mod_size, &mod_blob);
   std::clog << "Modulus size: " << mod_size << std::endl;
   ret.modulus = std::string(std::string(mod_blob, mod_blob+mod_size));
+
+  // Print the public key.
+  // We extract the modulus and exponent separately instead for now.
+  if (false) {
+    TSCALL(Tspi_Key_LoadKey, key, stuff.srk());
+
+    UINT32 pub_size;
+    BYTE* pub;
+    TSCALL(Tspi_Key_GetPubKey, key, &pub_size, &pub);
+    std::clog << "Pub: " << to_hex(std::string((char*)pub, pub_size)) << std::endl;
+  }
 
   // Get exponent.
   UINT32 exp_size;
@@ -484,6 +489,94 @@ auth_required(const std::string* srk_pin, const Key& key)
 }
 
 std::string
+slurp_file(const std::string& fn)
+{
+  std::ifstream f(fn);
+  if (!f) {
+    throw std::runtime_error("Can't open file " + fn);
+  }
+  return std::string{std::istreambuf_iterator<char>(f),
+                     std::istreambuf_iterator<char>()};
+}
+
+// Set password/PIN on a policy. If nullptr pin is given, use the Well Known Secret.
+void
+set_policy_secret(TSS_HPOLICY policy, const std::string* pin)
+{
+  if (pin) {
+    TSCALL(Tspi_Policy_SetSecret, policy,
+           TSS_SECRET_MODE_PLAIN,
+           pin->size(),
+           (BYTE*)pin->data());
+  } else {
+    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
+    int wks_size = sizeof(wks);
+    TSCALL(Tspi_Policy_SetSecret, policy,
+           TSS_SECRET_MODE_SHA1, wks_size, wks);
+  }
+}
+
+/*
+  https://www.cylab.cmu.edu/tiw/slides/challener-TPM.pdf
+ */
+SoftwareKey
+exfiltrate_key(const Key& key,
+               const std::string* srk_pin,
+               const std::string& owner_password,
+               const std::string* key_pin)
+{
+  TPMStuff stuff{srk_pin};
+
+  // === Load key ===
+  int init_flags =
+    TSS_KEY_TYPE_SIGNING
+    | TSS_KEY_VOLATILE
+    | TSS_KEY_NO_AUTHORIZATION
+    | TSS_KEY_MIGRATABLE;
+  TSS_HKEY sign;
+  TSS_HPOLICY policy_sign;
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(), TSS_OBJECT_TYPE_RSAKEY,
+         init_flags, &sign);
+  TSCALL(Tspi_Context_LoadKeyByBlob, stuff.ctx(), stuff.srk(),
+         key.blob.size(), (BYTE*)key.blob.data(), &sign);
+  TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
+         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE,
+         &policy_sign);
+  set_policy_secret(policy_sign, key_pin);
+  TSCALL(Tspi_Policy_AssignToObject, policy_sign, sign);
+
+  // Set owner password.
+  {
+    TSS_HPOLICY policy_tpm;
+    TSCALL(Tspi_GetPolicyObject, stuff.tpm(), TSS_POLICY_USAGE, &policy_tpm);
+    set_policy_secret(policy_tpm, &owner_password);
+  }
+
+  // Generate migration ticket.
+  BYTE* ticket;
+  UINT32 ticket_size;
+  TSCALL(Tspi_TPM_AuthorizeMigrationTicket,
+         stuff.tpm(),
+         stuff.srk(), // TODO: change to target key.
+         TSS_MS_REWRAP,
+         &ticket_size, &ticket);
+
+  // Create migration blob.
+  BYTE* rnd;
+  UINT32 rnd_size;
+  BYTE* migrblob;
+  UINT32 migrblob_size;
+  TSCALL(Tspi_Key_CreateMigrationBlob,
+         sign, stuff.srk(),
+         ticket_size, ticket,
+         &rnd_size, &rnd,
+         &migrblob_size, &migrblob);
+
+  // TODO: Decrypt migration blob.
+  return SoftwareKey();
+}
+
+std::string
 sign(const Key& key, const std::string& data,
      const std::string* srk_pin,
      const std::string* key_pin)
@@ -506,17 +599,7 @@ sign(const Key& key, const std::string& data,
          TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE,
          &policy_sign);
 
-  if (key_pin) {
-    TSCALL(Tspi_Policy_SetSecret, policy_sign,
-           TSS_SECRET_MODE_PLAIN,
-           key_pin->size(),
-           (BYTE*)key_pin->data());
-  } else {
-    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-    int wks_size = sizeof(wks);
-    TSCALL(Tspi_Policy_SetSecret, policy_sign,
-           TSS_SECRET_MODE_SHA1, wks_size, wks);
-  }
+  set_policy_secret(policy_sign, key_pin);
   TSCALL(Tspi_Policy_AssignToObject, policy_sign, sign);
 
   // === Sign ===

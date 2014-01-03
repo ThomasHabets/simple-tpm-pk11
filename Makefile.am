@@ -2,7 +2,7 @@ ACLOCAL_AMFLAGS=-I m4
 
 SUBDIRS=doc
 
-bin_PROGRAMS=stpm-keygen stpm-sign
+bin_PROGRAMS=stpm-keygen stpm-sign stpm-exfiltrate
 TESTS=stpm-keygen_test stpm-sign_test common_test pk11_test
 check_PROGRAMS=$(TESTS)
 
@@ -40,6 +40,12 @@ src/fake_tspi.cc \
 src/libgtest.cc
 stpm_keygen_test_CXXFLAGS=-I/usr/src/gtest
 stpm_keygen_test_LDFLAGS=
+
+stpm_exfiltrate_SOURCES=\
+src/wrap_main.cc \
+src/common.cc \
+src/tspiwrap.cc \
+src/exfiltrate.cc
 
 stpm_sign_SOURCES=\
 src/wrap_main.cc \

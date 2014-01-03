@@ -195,6 +195,17 @@ Tspi_Key_WrapKey(TSS_HKEY  hKey,
   return TSS_SUCCESS;
 }
 
+TSPICALL
+Tspi_TPM_AuthorizeMigrationTicket(TSS_HTPM           hTPM,
+                                  TSS_HKEY           hMigrationKey,
+                                  TSS_MIGRATE_SCHEME migrationScheme,
+                                  UINT32*            pulMigTicketLength,
+                                  BYTE**             prgbMigTicket)
+{
+  return TSS_SUCCESS;
+}
+
+
 /* ---- Emacs Variables ----
  * Local Variables:
  * c-basic-offset: 2

@@ -65,18 +65,7 @@ TspiKey::TspiKey(TspiContext& ctx, TSS_UUID uuid, const std::string* pin)
     TSCALL(Tspi_Context_CreateObject, ctx_.ctx(),
            TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE, &policy_);
 
-    if (pin) {
-      TSCALL(Tspi_Policy_SetSecret, policy_,
-             TSS_SECRET_MODE_PLAIN,
-             pin->size(),
-             (BYTE*)pin->data());
-    } else {
-      BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-      int wks_size = sizeof(wks);
-      TSCALL(Tspi_Policy_SetSecret, policy_,
-             TSS_SECRET_MODE_SHA1, wks_size, wks);
-    }
-
+    set_policy_secret(policy_, pin);
     TSCALL(Tspi_Policy_AssignToObject, policy_, key_);
   } catch (...) {
     destroy();

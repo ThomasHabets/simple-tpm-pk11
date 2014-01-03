@@ -22,6 +22,8 @@
 #include<stdexcept>
 #include<string>
 
+#include"tss/tspi.h"
+
 namespace stpm {
 #if 0
 }
@@ -89,16 +91,29 @@ std::string sign(const Key& key, const std::string& data,
                  const std::string* srk_pin,
                  const std::string* key_pin);
 
+// Exfiltrate key
+// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+SoftwareKey exfiltrate_key(const Key& key,
+                           const std::string* srk_pin,
+                           const std::string& owner_password,
+                           const std::string* key_pin);
+
 // Return true if key is password protected.
 bool auth_required(const std::string* srk_pin, const Key& key);
 
 std::string xctime();
 
+// Read in a whole file.
+std::string slurp_file(const std::string& fn);
+
 void do_log(std::ostream* o, const std::string& msg);
+
+void set_policy_secret(TSS_HPOLICY policy, const std::string* pin);
 }  // namespace stpm
 
 // Pretty-print keys.
-std::ostream& operator<<(std::ostream&, struct stpm::Key&);
+std::ostream& operator<<(std::ostream&, const struct stpm::Key&);
+std::ostream& operator<<(std::ostream&, const struct stpm::SoftwareKey&);
 #endif
 /* ---- Emacs Variables ----
  * Local Variables:
