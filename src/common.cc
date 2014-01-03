@@ -95,6 +95,13 @@ std::string
 TSPIException::code_to_extra(int code)
 {
   switch (code) {
+  case TPM_E_INVALID_KEYHANDLE:
+    return "Likely problem:\n"
+      "  If this happened while trying to read the public SRK, then your TPM is not\n"
+      "  configured to allow that. If it happens on any other key then it's probably\n"
+      "  a bug in simple-tpm-pk11.\n"
+      "Possible solution:\n"
+      "  Allow reading public SRK with tpm_restrictsrk -a.";
   case TPM_E_AUTHFAIL:
     return "Likely problem:\n"
       "  Either the SRK password or the key password is incorrect.\n"
@@ -248,6 +255,7 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
     UINT32 pubKeySize;
     BYTE *pubKey;
     TSCALL(Tspi_Key_GetPubKey, stuff.srk(), &pubKeySize, &pubKey);
+    Tspi_Context_FreeMemory(stuff.ctx(), pubKey);
   }
 
   // Need to set DER mode for signing.
@@ -540,7 +548,7 @@ exfiltrate_key(const Key& key,
   TSCALL(Tspi_Context_LoadKeyByBlob, stuff.ctx(), stuff.srk(),
          key.blob.size(), (BYTE*)key.blob.data(), &sign);
   TSCALL(Tspi_Context_CreateObject, stuff.ctx(),
-         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_USAGE,
+         TSS_OBJECT_TYPE_POLICY, TSS_POLICY_MIGRATION,
          &policy_sign);
   set_policy_secret(policy_sign, key_pin);
   TSCALL(Tspi_Policy_AssignToObject, policy_sign, sign);
@@ -557,7 +565,7 @@ exfiltrate_key(const Key& key,
   UINT32 ticket_size;
   TSCALL(Tspi_TPM_AuthorizeMigrationTicket,
          stuff.tpm(),
-         stuff.srk(), // TODO: change to target key.
+         stuff.srk(),   // TODO: change to target key.
          TSS_MS_REWRAP,
          &ticket_size, &ticket);
 
@@ -567,10 +575,11 @@ exfiltrate_key(const Key& key,
   BYTE* migrblob;
   UINT32 migrblob_size;
   TSCALL(Tspi_Key_CreateMigrationBlob,
-         sign, stuff.srk(),
-         ticket_size, ticket,
-         &rnd_size, &rnd,
-         &migrblob_size, &migrblob);
+         sign,                        // Key to migrate.
+         stuff.srk(),                 // Parent key.
+         ticket_size, ticket,         // Migration ticket.
+         &rnd_size, &rnd,             // Random data.
+         &migrblob_size, &migrblob);  // Migration data blob.
 
   // TODO: Decrypt migration blob.
   return SoftwareKey();

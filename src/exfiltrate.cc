@@ -21,13 +21,13 @@
 int
 wrapped_main(int argc, char **argv)
 {
-  bool set_srk_pin = true;
+  bool set_srk_pin = false;
   bool set_key_pin = false;
   std::string srk_pin = "";
   std::string key_pin = "";
   std::string owner;
 
-  if (false) {
+  if (true) {
     std::cerr << "Enter owner password: " << std::flush;
     getline(std::cin, owner);
   }
