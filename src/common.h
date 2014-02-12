@@ -73,7 +73,7 @@ std::string xgethostname();
 Key parse_keyfile(const std::string&);
 
 // Generate a signing key inside the TPM.
-// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+// If a PIN is NULL, use the Well Known Secret (20 null bytes unhashed).
 Key generate_key(const std::string* srk_pin, const std::string* key_pin,
                  int bits);
 
@@ -81,18 +81,18 @@ Key generate_key(const std::string* srk_pin, const std::string* key_pin,
 SoftwareKey generate_software_key(int bits);
 
 // Generate a signing key inside the TPM.
-// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+// If a PIN is NULL, use the Well Known Secret (20 null bytes unhashed).
 Key wrap_key(const std::string* srk_pin, const std::string* key_pin,
              const SoftwareKey& key);
 
 // Sign plain data.
-// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+// If a PIN is NULL, use the Well Known Secret (20 null bytes unhashed).
 std::string sign(const Key& key, const std::string& data,
                  const std::string* srk_pin,
                  const std::string* key_pin);
 
 // Exfiltrate key
-// If a PIN is zero, use the Well Known Secret (20 null bytes unhashed).
+// If a PIN is NULL, use the Well Known Secret (20 null bytes unhashed).
 SoftwareKey exfiltrate_key(const Key& key,
                            const std::string* srk_pin,
                            const std::string& owner_password,

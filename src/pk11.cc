@@ -264,7 +264,7 @@ C_GetMechanismList(CK_SLOT_ID slotId, CK_MECHANISM_TYPE_PTR pMechanismList,
 		   CK_ULONG_PTR pulCount)
 {
   return wrap_exceptions(__func__, [&]{
-      // We don't support any mechanisms.  This is a blatent lie, because
+      // TODO: We don't support any mechanisms.  This is a blatent lie, because
       // we do let you sign things.
       *pulCount = 0;
   });

@@ -254,7 +254,6 @@ generate_software_key(int bits)
   return swkey;
 }
 
-// TODO: Complete this implementation.
 Key
 wrap_key(const std::string* srk_pin, const std::string* key_pin,
          const SoftwareKey& swkey)
@@ -554,8 +553,9 @@ set_policy_secret(TSS_HPOLICY policy, const std::string* pin)
   }
 }
 
-/*
-  https://www.cylab.cmu.edu/tiw/slides/challener-TPM.pdf
+/**
+ * https://www.cylab.cmu.edu/tiw/slides/challener-TPM.pdf
+ * TODO: this doesn't work yet.
  */
 SoftwareKey
 exfiltrate_key(const Key& key,
