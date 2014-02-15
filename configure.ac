@@ -20,6 +20,11 @@ AC_CHECK_LIB([tspi], [Tspi_GetAttribUint32], [], [
     [echo " libtspi is missing the required function Tspi_GetAttribUint32."]
     [exit 1]
 ])
+AC_CHECK_LIB([crypto], [BN_new], [], [
+    [echo "Cannot continue:"]
+    [echo " libcrypto is missing the required function BN_new."]
+    [exit 1]
+])
 AC_CHECK_HEADERS([opencryptoki/pkcs11.h], [], [
     [echo "Cannot continue:"]
     [echo " opencryptoki headers are missing; please install the package providing"]
