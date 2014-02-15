@@ -15,6 +15,7 @@
  */
 #include<string>
 #include<iostream>
+#include<unistd.h>
 
 #include"common.h"
 #include"internal.h"
