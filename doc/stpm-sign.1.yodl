@@ -44,10 +44,6 @@ manpagediagnostics()
     of them. See the em(TPM-TROUBLESHOOTING) section of
     bf(simple-tpm-pk11(7)).
 
-manpagebugs()
-    The password is read from stdin without turning off echo. It should be
-    read from the terminal without echo.
-
 manpageseealso()
     bf(simple-tpm-pk11(7)), bf(stpm-keygen(1)).
 
