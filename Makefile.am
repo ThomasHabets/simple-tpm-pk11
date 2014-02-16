@@ -66,15 +66,15 @@ stpm_sign_test_CXXFLAGS=-I/usr/src/gtest
 stpm_sign_test_LDFLAGS=
 stpm_sign_test_LDADD=-lpthread
 
-nobase_lib_LTLIBRARIES=simple-tpm-pk11/libsimple-tpm-pk11.la
+lib_LTLIBRARIES=libsimple-tpm-pk11.la
 # Workaround for "object `...' created both with libtool and without".
-simple_tpm_pk11_libsimple_tpm_pk11_la_CXXFLAGS = $(AM_CXXFLAGS)
-simple_tpm_pk11_libsimple_tpm_pk11_la_SOURCES=\
+libsimple_tpm_pk11_la_CXXFLAGS = $(AM_CXXFLAGS)
+libsimple_tpm_pk11_la_SOURCES=\
 src/pk11.cc \
 src/session.cc \
 src/tspiwrap.cc \
 src/common.cc
-simple_tpm_pk11_libsimple_tpm_pk11_la_LDFLAGS=-version-info 0:0:0
+libsimple_tpm_pk11_la_LDFLAGS=-version-info 0:0:0
 
 check-tpm:
 	./testscripts/all.sh
