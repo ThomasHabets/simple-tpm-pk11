@@ -14,6 +14,7 @@ src/fake_tspi.cc \
 src/libgtest.cc
 common_test_CXXFLAGS=-I/usr/src/gtest
 common_test_LDFLAGS=
+common_test_LDADD=-lpthread
 
 pk11_test_SOURCES=\
 src/pk11_test.cc \
@@ -25,6 +26,7 @@ src/fake_tspi.cc \
 src/libgtest.cc
 pk11_test_CXXFLAGS=-I/usr/src/gtest
 pk11_test_LDFLAGS=
+pk11_test_LDADD=-lpthread
 
 stpm_keygen_SOURCES=\
 src/keygen.cc \
@@ -40,6 +42,7 @@ src/fake_tspi.cc \
 src/libgtest.cc
 stpm_keygen_test_CXXFLAGS=-I/usr/src/gtest
 stpm_keygen_test_LDFLAGS=
+stpm_keygen_test_LDADD=-lpthread
 
 stpm_exfiltrate_SOURCES=\
 src/wrap_main.cc \
@@ -61,6 +64,7 @@ src/fake_tspi.cc \
 src/libgtest.cc
 stpm_sign_test_CXXFLAGS=-I/usr/src/gtest
 stpm_sign_test_LDFLAGS=
+stpm_sign_test_LDADD=-lpthread
 
 lib_LTLIBRARIES=libsimple-tpm-pk11.la
 # Workaround for "object `...' created both with libtool and without".
