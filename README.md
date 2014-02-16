@@ -70,21 +70,21 @@ Optionally add "log foo.log" in there too.
 
 ### 3. Extract the public key in SSH format
 ```
-ssh-keygen -D /usr/local/lib/libsimple-tpm-pk11.so
+ssh-keygen -D /usr/local/lib/simple-tpm-pk11/libsimple-tpm-pk11.so
 ```
 
 Install it where you want to log in, in the usual authorized_keys way.
 
 Try logging in using your new fancy key:
 ```
-ssh -I /usr/local/lib/libsimple-tpm-pk11.so shell.example.com
+ssh -I /usr/local/lib/simple-tpm-pk11/libsimple-tpm-pk11.so shell.example.com
 ```
 
 ### 4. Configure SSH to always use this module
 Add this to `~/.ssh/config`:
 ```
 Host *
-      PKCS11Provider /usr/local/lib/libsimple-tpm-pk11.so
+      PKCS11Provider /usr/local/lib/simple-tpm-pk11/libsimple-tpm-pk11.so
 ```
 
 then try:
@@ -150,7 +150,7 @@ rm -fr autom4te.cache
 git add .
 git commit
 [...]
-git tag simple-tpm-pk11-$V
+git tag -a simple-tpm-pk11-$V
 git checkout master
 git push --tags
 ```
