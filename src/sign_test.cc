@@ -29,7 +29,7 @@ TEST(Usage, NoOpts)
     NULL,
   };
   EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
-  EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
+  EXPECT_TRUE(s.stdout().find("\nUsage: ") != std::string::npos);
   EXPECT_EQ("stpm-sign: Need to specify keyfile and data file\n", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }
@@ -45,7 +45,7 @@ TEST(Sign, NoDataFile)
     NULL,
   };
   EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
-  EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
+  EXPECT_TRUE(s.stdout().find("\nUsage: ") != std::string::npos);
   EXPECT_EQ("stpm-sign: Need to specify keyfile and data file\n", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }
@@ -61,7 +61,7 @@ TEST(Sign, NoKeyFile)
     NULL,
   };
   EXPECT_EQ(1, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
-  EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
+  EXPECT_TRUE(s.stdout().find("\nUsage: ") != std::string::npos);
   EXPECT_EQ("stpm-sign: Need to specify keyfile and data file\n", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }
@@ -76,7 +76,7 @@ TEST(Usage, HelpOpts)
     NULL,
   };
   EXPECT_EQ(0, wrapped_main(sizeof(argv)/sizeof(void*) - 1, argv));
-  EXPECT_EQ("Usage: ", s.stdout().substr(0, 7));
+  EXPECT_TRUE(s.stdout().find("\nUsage: ") != std::string::npos);
   EXPECT_EQ("", s.stderr());
   EXPECT_EQ("", s.stdlog());
 }

@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 // Key generator main().
+#ifdef HAVE_CONFIG_H
+#include"config.h"
+#endif
+
 #include<cstring>
 #include<cstdlib>
 #include<fstream>
@@ -29,7 +33,8 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: " << argv0base << " [ -hsSp ] [ -b <bits> ] -o <output file>\n"
+  std::cout << PACKAGE_STRING << std::endl
+            << "Usage: " << argv0base << " [ -hsSp ] [ -b <bits> ] -o <output file>\n"
             << "    -b <bits>         Key size in bits. TPM chips tend to support up to 2048.\n"
             << "    -h, --help        Show this help text.\n"
             << "    -o <output file>  Output file to store the key information in.\n"

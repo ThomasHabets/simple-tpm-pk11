@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifdef HAVE_CONFIG_H
+#include"config.h"
+#endif
 #include<cstdio>
 #include<fstream>
 #include<iomanip>
@@ -34,7 +37,8 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: " << argv0base << " [ -hs ] -f <data> -k <keyfile>\n"
+  std::cout << PACKAGE_STRING << std::endl
+            << "Usage: " << argv0base << " [ -hs ] -f <data> -k <keyfile>\n"
             << "    -f <data file>    File to sign.\n"
             << "    -h, --help        Show this help text.\n"
             << "    -k <keyfile>      File containing key data.\n"

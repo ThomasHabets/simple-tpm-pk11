@@ -13,6 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#ifdef HAVE_CONFIG_H
+#include"config.h"
+#endif
+
 #include<string>
 #include<iostream>
 #include<unistd.h>
@@ -26,7 +30,8 @@ BEGIN_NAMESPACE();
 int
 usage(int rc)
 {
-  std::cout << "Usage: " << argv0base << " [ -hsOp ] -k <key file>\n"
+  std::cout << PACKAGE_STRING << std::endl
+            << "Usage: " << argv0base << " [ -hsOp ] -k <key file>\n"
             << "    -h, --help     Show this help text.\n"
             << "    -k <key file>  Key file.\n"
             << "    -O             Use Well Known Secret for owner password. Default is ask.\n"
