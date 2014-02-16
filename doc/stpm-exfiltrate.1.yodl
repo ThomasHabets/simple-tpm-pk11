@@ -1,0 +1,58 @@
+manpage(stpm-exfiltrate)(1)(16th Febrary, 2014)(simple-tpm-pk11)()
+manpagename(stpm-exfiltrate)(Extract key from TPM chip)
+
+manpagesynopsis()
+    bf(stpm-exfiltrate) [ -hOps ] -k em(key file)
+
+manpagedescription()
+    em(stpm-exfiltrate) extracts a key that is otherwise protected by
+    the TPM chip. This only works if the key is "migratable" (meaning it was
+    generated in software), and the TPM owner password is known.
+
+    This is why you should generate keys in hardware (the default) with
+    stpm-keygen and not use its -S option.
+
+manpageoptions()
+startdit()
+    dit(-h) Show usage info.
+    dit(-k em(key file)) Key blob file to read.
+    dit(-O) Use Well Known Secret for owner password. Default is ask.
+    dit(-p) Ask for key PIN / password. Default is Well Known Secret.
+    dit(-o) Ask for SRK PIN / password. Default is Well Known Secret.
+enddit()
+ 
+manpagesection(EXAMPLES)
+mancommand(.nf)
+mancommand(.sp)
+
+    stpm-exfiltrate -k ~/.simple-tpm-pk11/my.key
+    Enter owner password: blah blah
+    [ ... key data here ...]
+
+    stpm-exfiltrate -p -k ~/.simple-tpm-pk11/my.key
+    Enter owner password: blah blah
+    Enter key PIN: my secret password here
+    [ ... key data here ...]
+
+    stpm-exfiltrate -sp -k ~/.simple-tpm-pk11/my.key
+    Enter owner password: blah blah
+    Enter key PIN: my secret password here
+    Enter SRK PIN: 12345678
+    [ ... key data here ...]
+mancommand(.fi)
+mancommand(.in)
+
+manpagediagnostics()
+    Most errors will probably be related to interacting with the TPM chip.
+    Resetting the TPM chip and taking ownership should take care of most
+    of them. See the em(TPM-TROUBLESHOOTING) section of
+    bf(simple-tpm-pk11(7)).
+
+manpageseealso()
+    bf(simple-tpm-pk11(7)), bf(stpm-sign(1)), bf(stpm-keygen).
+
+manpageauthor()
+    Simple-TPM-PK11 was written By Thomas Habets <habets@google.com>
+    / <thomas@habets.se>.
+
+    git clone https://github.com/ThomasHabets/simple-tpm-pk11.git

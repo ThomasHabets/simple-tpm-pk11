@@ -1,0 +1,63 @@
+.TH "stpm\-exfiltrate" "1" "16th Febrary, 2014" "simple\-tpm\-pk11" ""
+.SH "NAME"
+stpm\-exfiltrate \- Extract key from TPM chip
+.PP 
+.SH "SYNOPSIS"
+\fBstpm\-exfiltrate\fP [ \-hOps ] \-k \fIkey file\fP
+.PP 
+.SH "DESCRIPTION"
+\fIstpm\-exfiltrate\fP extracts a key that is otherwise protected by
+the TPM chip\&. This only works if the key is \(dq\&migratable\(dq\& (meaning it was
+generated in software), and the TPM owner password is known\&.
+.PP 
+This is why you should generate keys in hardware (the default) with
+stpm\-keygen and not use its \-S option\&.
+.PP 
+.SH "OPTIONS"
+.IP "\-h"
+Show usage info\&.
+.IP "\-k \fIkey file\fP"
+Key blob file to read\&.
+.IP "\-O"
+Use Well Known Secret for owner password\&. Default is ask\&.
+.IP "\-p"
+Ask for key PIN / password\&. Default is Well Known Secret\&.
+.IP "\-o"
+Ask for SRK PIN / password\&. Default is Well Known Secret\&.
+
+.PP 
+.SH "EXAMPLES"
+.nf
+.sp
+.PP 
+stpm\-exfiltrate \-k ~/\&.simple\-tpm\-pk11/my\&.key
+Enter owner password: blah blah
+[ \&.\&.\&. key data here \&.\&.\&.]
+.PP 
+stpm\-exfiltrate \-p \-k ~/\&.simple\-tpm\-pk11/my\&.key
+Enter owner password: blah blah
+Enter key PIN: my secret password here
+[ \&.\&.\&. key data here \&.\&.\&.]
+.PP 
+stpm\-exfiltrate \-sp \-k ~/\&.simple\-tpm\-pk11/my\&.key
+Enter owner password: blah blah
+Enter key PIN: my secret password here
+Enter SRK PIN: 12345678
+[ \&.\&.\&. key data here \&.\&.\&.]
+.fi
+.in
+.PP 
+.SH "DIAGNOSTICS"
+Most errors will probably be related to interacting with the TPM chip\&.
+Resetting the TPM chip and taking ownership should take care of most
+of them\&. See the \fITPM\-TROUBLESHOOTING\fP section of
+\fBsimple\-tpm\-pk11(7)\fP\&.
+.PP 
+.SH "SEE ALSO"
+\fBsimple\-tpm\-pk11(7)\fP, \fBstpm\-sign(1)\fP, \fBstpm\-keygen\fP\&.
+.PP 
+.SH "AUTHOR"
+Simple\-TPM\-PK11 was written By Thomas Habets <habets@google\&.com>
+/ <thomas@habets\&.se>\&.
+.PP 
+git clone https://github\&.com/ThomasHabets/simple\-tpm\-pk11\&.git
