@@ -15,7 +15,7 @@ https://github.com/ThomasHabets/
 Install dependencies
 --------------------
 ```
-apt-get install tpm-tools libtspi-dev libopencryptoki-dev
+apt-get install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
 ```
 
 
