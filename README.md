@@ -14,8 +14,16 @@ https://github.com/ThomasHabets/
 
 Install dependencies
 --------------------
+Debian:
 ```
 apt-get install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
+```
+Fedora:
+```
+tpm-tools
+opencryptoki-devel
+trousers-devel
+openssl-devel
 ```
 
 
