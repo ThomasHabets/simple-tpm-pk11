@@ -186,9 +186,14 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
       }
       break;
 
+    case CKA_SUBJECT:
+    case CKA_VALUE:
+      // Unsupported attributes.
+      pTemplate[i].ulValueLen = 0;
+      break;
+
     default:
-      // TODO: handle unknowns better.
-      pTemplate[i].ulValueLen = 10;
+      pTemplate[i].ulValueLen = 0;
       std::stringstream ss;
       ss << stpm::xctime()
          << " unknown attribute: "
