@@ -148,20 +148,9 @@ Reference links
 
 Make new release
 ----------------
-```
-V=0.02
-git checkout -b simple-tpm-pk11-$V-branch
-make mrproper
-# make sure git status is empty
-./bootstrap.sh
-rm -fr autom4te.cache
-git add .
-git commit
-[...]
-git tag -a simple-tpm-pk11-$V
-git checkout master
-git push --tags
-```
+* Update configure.ac with new version, commit.
+* git tag -a -s 0.0x
+* git push --tags
 
 
 Some random notes, not instructions
