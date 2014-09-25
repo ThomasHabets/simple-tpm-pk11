@@ -37,3 +37,11 @@ Problem
 Solution
   Did you reboot after clearing/taking ownership? Try that first.
 ---
+Problem
+  stpm-keygen -o my.key
+  Tspi_Context_LoadKeyByUUID: Code=0x00002020: tcs: Key not found in persistent storage
+Solution
+  Is the TPM chip active? Check with tpm_getpubek. If it says it's
+  inactive you may need to turn it on in the BIOS. If that doesn't
+  work, try clearing it and starting from scratch.
+---

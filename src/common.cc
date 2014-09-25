@@ -149,6 +149,13 @@ TSPIException::code_to_extra(int code)
       "  Make sure trousers is started (/etc/init.d/trousers start) correctly, and\n"
       "  and check any logs for why it might not be coming up correctly.\n"
       "  It could fail to start because it's not finding a device /dev/tpm*.";
+  case TSS_E_PS_KEY_NOTFOUND:
+    return "Likely problem:\n"
+      "  The TPM chip is not active. Use tpm_getpubek to see if its error message\n"
+      "  confirms this.\n"
+      "Possible solution:\n"
+      "  Power off the machine, power it back on, go into BIOS, and make sure the\n"
+      "  TPM chip / security chip is \"Active\".";
   }
   return "";
 }
