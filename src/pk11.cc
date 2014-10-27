@@ -47,6 +47,7 @@ CK_FUNCTION_LIST funclist;
 const std::string config_dir = ".simple-tpm-pk11";
 const char* env_debug = "SIMPLE_TPM_PK11_DEBUG";
 const char* env_config = "SIMPLE_TPM_PK11_CONFIG";
+const CK_SLOT_ID tpm_slot_id = 0x1234;
 
 // TODO: allocate and free sessions properly.
 std::vector<Session> sessions;
@@ -150,7 +151,7 @@ C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList,
 {
   return wrap_exceptions(__func__, [&]{
       if (*pusCount) {
-        *pSlotList = 0x1234;
+        *pSlotList = tpm_slot_id;
       }
       *pusCount = 1;
   });
@@ -227,6 +228,7 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
       strcpy((char*)pInfo->model, "model");
       strcpy((char*)pInfo->serialNumber, "serial");
 
+      // TODO: Add CKF_RNG.
       pInfo->flags = CKF_TOKEN_INITIALIZED;
       auto config = get_config();
 
@@ -260,14 +262,48 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 }
 
 CK_RV
-C_GetMechanismList(CK_SLOT_ID slotId, CK_MECHANISM_TYPE_PTR pMechanismList,
+C_GetMechanismList(CK_SLOT_ID slot_id, CK_MECHANISM_TYPE_PTR pMechanismList,
 		   CK_ULONG_PTR pulCount)
 {
   return wrap_exceptions(__func__, [&]{
-      // TODO: We don't support any mechanisms.  This is a blatent lie, because
-      // we do let you sign things.
-      *pulCount = 0;
+      // TODO: I'm making these mechanisms up. They are probably not correct.
+      if (slot_id != tpm_slot_id) {
+        throw PK11Error(CKR_GENERAL_ERROR, "Not supported.");
+      }
+      if (*pulCount > 0) {
+        pMechanismList[0] = CKM_RSA_PKCS;
+      }
+
+      // PKCS#11 key generation not yet implemented.
+      // if (*pulCount > 1) {
+      //   pMechanismList[1] = CKM_RSA_PKCS_KEY_PAIR_GEN;
+      // }
+      *pulCount = 1;
   });
+}
+
+CK_RV
+C_GetMechanismInfo(CK_SLOT_ID slot_id, CK_MECHANISM_TYPE type,
+                   CK_MECHANISM_INFO *info)
+{
+  // TODO: I'm making these mechanisms up. They are probably not correct.
+  return wrap_exceptions(__func__, [&]{
+      if (slot_id != tpm_slot_id) {
+        throw PK11Error(CKR_GENERAL_ERROR, "Not supported.");
+      }
+      info->ulMinKeySize = 512;
+      info->ulMaxKeySize = 2048;
+      switch (type) {
+      case CKM_RSA_PKCS:
+        info->flags = CKF_SIGN | CKF_HW;
+        break;
+      case CKM_RSA_PKCS_KEY_PAIR_GEN:
+        info->flags = CKF_GENERATE_KEY_PAIR | CKF_HW;
+        break;
+      default:
+        throw PK11Error(CKR_GENERAL_ERROR, "Not supported.");
+      }
+    });
 }
 
 CK_RV
@@ -356,6 +392,7 @@ void cons()
   F(GetSlotInfo);
   F(GetTokenInfo);
   F(GetMechanismList);
+  F(GetMechanismInfo);
   F(Login);
   F(Logout);
   F(OpenSession);
