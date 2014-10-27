@@ -210,7 +210,7 @@ C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
       strcpy((char*)pInfo->slotDescription, "Simple-TPM-PK11 slot");
       strcpy((char*)pInfo->manufacturerID, "manuf id");
 
-      pInfo->flags = 0;
+      pInfo->flags = CKF_TOKEN_PRESENT;
       pInfo->hardwareVersion = { 0, 0 };
       pInfo->firmwareVersion = { 0, 0 };
   });
@@ -227,7 +227,7 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
       strcpy((char*)pInfo->model, "model");
       strcpy((char*)pInfo->serialNumber, "serial");
 
-      pInfo->flags = 0;
+      pInfo->flags = CKF_TOKEN_INITIALIZED;
       auto config = get_config();
 
       std::string kfs;
