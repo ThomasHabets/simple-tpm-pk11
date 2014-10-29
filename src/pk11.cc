@@ -373,6 +373,43 @@ C_Initialize(CK_VOID_PTR pInitArgs)
 }
 
 CK_RV
+C_InitToken(CK_SLOT_ID slot_id, unsigned char *pin,
+            unsigned long pin_len, unsigned char *label)
+{
+  return wrap_exceptions(__func__, [&]{
+    throw PK11Error(CKR_GENERAL_ERROR, "Not implemented.");
+  });
+}
+
+CK_RV
+C_InitPIN(CK_SESSION_HANDLE session, unsigned char *pin,
+          unsigned long pin_len)
+{
+  return wrap_exceptions(__func__, [&]{
+    throw PK11Error(CKR_GENERAL_ERROR, "Not implemented.");
+  });
+}
+
+CK_RV
+C_SetPIN(CK_SESSION_HANDLE session, unsigned char *old_pin,
+         unsigned long old_len, unsigned char *new_pin,
+         unsigned long new_len)
+{
+  return wrap_exceptions(__func__, [&]{
+    throw PK11Error(CKR_GENERAL_ERROR, "Not implemented.");
+  });
+}
+
+CK_RV
+C_CloseAllSessions(CK_SLOT_ID slot_id)
+{
+  return wrap_exceptions(__func__, [&]{
+    throw PK11Error(CKR_GENERAL_ERROR, "Not implemented.");
+  });
+}
+
+
+CK_RV
 C_SeedRandom(CK_SESSION_HANDLE hSession, CK_BYTE_PTR pSeed, CK_ULONG ulSeedLen)
 {
   return wrap_exceptions(__func__, [&]{
@@ -387,6 +424,9 @@ void cons()
 #define F(x) funclist.C_##x = C_##x
   F(GetInfo);
   F(Initialize);
+  F(InitToken);
+  F(InitPIN);
+  F(SetPIN);
   F(Finalize);
   F(GetSlotList);
   F(GetSlotInfo);
@@ -395,12 +435,16 @@ void cons()
   F(GetMechanismInfo);
   F(Login);
   F(Logout);
+
   F(OpenSession);
   F(CloseSession);
+  F(CloseAllSessions);
   F(GetSessionInfo);
+
   F(FindObjectsInit);
   F(FindObjects);
   F(FindObjectsFinal);
+
   F(GetAttributeValue);
   F(SignInit);
   F(Sign);
