@@ -108,6 +108,7 @@ Tested with
 * Lenovo T410 / STM TPM 1.2.8.16
 * Lenovo T500 / INTC STM 1.2.4.1
 * Dell Precision T3500 / WEC TPM 1.2.2.81
+* Lenovo T440s / STM TPM 1.2.13.12
 
 ### Software
 * OpenSSH 6.0p1 on Debian 7.2
