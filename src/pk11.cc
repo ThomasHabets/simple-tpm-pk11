@@ -40,6 +40,7 @@
 #include"session.h"
 
 using stpm::xctime;
+using stpm::xsprintf;
 
 BEGIN_NAMESPACE();
 
@@ -113,7 +114,7 @@ get_config()
 CK_RV
 wrap_exceptions(const std::string& name, std::function<void()> f)
 {
-  log_debug(name + "()");
+  log_debug(name);
   try {
     f();
     return CKR_OK;
@@ -341,7 +342,7 @@ CK_RV
 C_GetAttributeValue(CK_SESSION_HANDLE hSession, CK_OBJECT_HANDLE hObject,
                     CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
 {
-  return wrap_exceptions(__func__, [&]{
+  return wrap_exceptions(xsprintf("%s(count=%d)", __func__, usCount), [&]{
       sessions[hSession].GetAttributeValue(hObject, pTemplate, usCount);
   });
 }

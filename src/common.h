@@ -107,6 +107,8 @@ std::string xctime();
 std::string slurp_file(const std::string& fn);
 
 void do_log(std::ostream* o, const std::string& msg);
+std::string xsprintf(const char* fmt, ...);
+
 
 // This function assumes std::cin is connected to STDIN_FILENO,
 // and that std::cout and std::cin are attached to "the terminal".

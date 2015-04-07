@@ -15,6 +15,7 @@
  */
 #include<cstdio>
 #include<cstring>
+#include<cstdarg>
 #include<fstream>
 #include<functional>
 #include<iomanip>
@@ -202,6 +203,24 @@ xctime()
     buf[strlen(buf)-1] = 0;
   }
   return buf;
+}
+
+std::string
+xsprintf(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+
+  va_list va2;
+  va_copy(va2, args);
+
+  size_t s = vsnprintf(NULL, 0, fmt, args) + 1;
+  va_end(args);
+
+  std::vector<char> buf(s);
+  vsnprintf(&buf[0], s, fmt, va2);
+  va_end(va2);
+
+  return std::string(buf.begin(), buf.end());
 }
 
 bool
