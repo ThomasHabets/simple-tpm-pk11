@@ -23,6 +23,7 @@
 #include<libgen.h>
 #include<sstream>
 #include<vector>
+#include<cstdarg>
 
 #include<openssl/bn.h>
 
@@ -144,6 +145,26 @@ Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
 }
 
 void
+Config::debug_log(const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+
+  va_list va2;
+  va_copy(va2, args);
+
+  size_t s = vsnprintf(NULL, 0, fmt, args) + 1;
+  va_end(args);
+
+  std::vector<char> buf(s);
+  vsnprintf(&buf[0], s, fmt, va2);
+  va_end(va2);
+
+  if (debug_) {
+    stpm::do_log(logfile_.get(), stpm::xctime() + " DEBUG " + std::string(buf.begin(), buf.end()));
+  }
+}
+
+void
 Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
                            CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
 {
@@ -156,15 +177,17 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
   }
   const stpm::Key key = stpm::parse_keyfile(kfs);
 
-
   for (unsigned i = 0; i < usCount; i++) {
     switch (pTemplate[i].type) {
     case CKA_ID:
+      config_.debug_log("   Attribute %d: ID", i);
       // TODO: populate properly.
       pTemplate[i].ulValueLen = 10; // ID
       break;
 
     case CKA_MODULUS:
+      config_.debug_log("   Attribute %d: Modulus size %d",
+                        i, key.modulus.size());
       pTemplate[i].ulValueLen = key.modulus.size();
       if (pTemplate[i].pValue) {
         BIGNUM *bnm = NULL;
@@ -176,6 +199,8 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
       break;
 
     case CKA_PUBLIC_EXPONENT:
+      config_.debug_log("   Attribute %d: Exponent size %d",
+                        i, key.exponent.size());
       pTemplate[i].ulValueLen = key.exponent.size();
       if (pTemplate[i].pValue) {
         BIGNUM *bne = NULL;
@@ -232,14 +257,10 @@ Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
   ss  << stpm::xctime()
       << " signing " << data.size() << " bytes.";
   stpm::do_log(config_.logfile_.get(), ss.str());
-  if (config_.debug_) {
-    ss.str("");
-    ss << stpm::xctime()
-       << " DEBUG signing " << stpm::to_hex(data)
-       << " (len " << data.size() << ")"
-       << ", output " << *pusSignatureLen << " bytes";
-    stpm::do_log(config_.logfile_.get(), ss.str());
-  }
+  config_.debug_log("signing %s (len %d), output %d bytes",
+                    stpm::to_hex(data).c_str(),
+                    data.size(),
+                    *pusSignatureLen);
 }
 /* ---- Emacs Variables ----
  * Local Variables:

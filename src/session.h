@@ -48,6 +48,8 @@ public:
   std::string key_pin_;
   bool debug_;
 
+  void debug_log(const char*,...);
+
  private:
   void read_file(std::ifstream&);
 };
