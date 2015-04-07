@@ -212,12 +212,17 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
       break;
 
     case CKA_SUBJECT:
+      config_.debug_log("   Attribute %d: Subject (unsupported)", i);
+      pTemplate[i].ulValueLen = 0;
+      break;
+
     case CKA_VALUE:
-      // Unsupported attributes.
+      config_.debug_log("   Attribute %d: Value (unsupported)", i);
       pTemplate[i].ulValueLen = 0;
       break;
 
     default:
+      config_.debug_log("   Attribute %d: Unknown (%d)", i, pTemplate[i].type);
       pTemplate[i].ulValueLen = 0;
       std::stringstream ss;
       ss << stpm::xctime()
