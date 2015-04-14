@@ -110,11 +110,13 @@ Tested with
 * Dell Precision T3500 / WEC TPM 1.2.2.81
 * Lenovo T440s / STM TPM 1.2.13.12
 * Lenovo X240 / STM TPM 1.2.13.12
+* Lenono X200s / INTC TPM 1.2.4.1
 
 ### Software
 * OpenSSH 6.0p1 on Debian 7.2
 * OpenSSH 5.9
 * OpenSSH 6.4p1 on CentOS 7.0
+* OpenSSH 6.8p1 on Arch Linux
 
 
 TODO
