@@ -25,7 +25,7 @@
 class PK11Error: public std::runtime_error {
 public:
   PK11Error(int incode, const std::string& msg)
-    :std::runtime_error("Code=" + std::to_string(unsigned(code)) + ": " + msg),
+    :std::runtime_error("Code=" + std::to_string(unsigned(incode)) + ": " + msg),
      code(incode)
   {}
   virtual ~PK11Error() throw() {}
