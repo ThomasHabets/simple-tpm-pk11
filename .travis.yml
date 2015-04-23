@@ -5,4 +5,4 @@ compiler:
 script: ./bootstrap.sh && ./configure && make && make check
 before_install:
   - sudo apt-get update -qq
-  - sudo apt-get install -qq tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
+  - sudo apt-get install -qq tpm-tools libtspi-dev libopencryptoki-dev libssl-dev libgtest-dev
