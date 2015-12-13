@@ -40,7 +40,7 @@ AC_SUBST([AM_LDFLAGS])
 # Library stuff.
 AC_ENABLE_SHARED
 AC_DISABLE_STATIC
-AC_PROG_LIBTOOL(libtool)
+LT_INIT(libtool)
 
 CXXFLAGS="$CXXFLAGS -std=gnu++0x -Wall"
 
