@@ -32,6 +32,19 @@ AC_CHECK_HEADERS([opencryptoki/pkcs11.h], [], [
     [exit 1]
 ])
 
+AC_ARG_WITH(precompiled-gtest,
+  [ --with-precompiled-gtest   Use a system-provided precompiled version of gtest],
+  [case "${withval}" in
+     yes | no ) WITH_PRECOMPILED_GTEST="${withval}" ;;
+     *) AC_MSG_ERROR(bad value ${withval} for --with-precompiled-gtest) ;;
+   esac],
+  [WITH_PRECOMPILED_GTEST="no"]
+)
+AM_CONDITIONAL([WITH_PRECOMPILED_GTEST], [test "x$WITH_PRECOMPILED_GTEST" = "xyes"])
+AS_IF([test "x$WITH_PRECOMPILED_GTEST" = "xyes"], [
+    AC_DEFINE([PRECOMPILED_GTEST], [], ["build using precompiled gtest library"])
+])
+
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_SUBST([AM_CXXFLAGS])

@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 #include<string>
+#include<config.h>
 
+#ifndef PRECOMPILED_GTEST
 #include"/usr/src/gtest/src/gtest_main.cc"
 #include"/usr/src/gtest/src/gtest-all.cc"
+#endif
 
 std::string argv0base = "test-binary";

@@ -76,6 +76,13 @@ src/tspiwrap.cc \
 src/common.cc
 libsimple_tpm_pk11_la_LDFLAGS=-version-info 0:0:0
 
+if WITH_PRECOMPILED_GTEST
+common_test_LDADD+=-lgtest -lgtest_main
+pk11_test_LDADD+=-lgtest -lgtest_main
+stpm_keygen_test_LDADD+=-lgtest -lgtest_main
+stpm_sign_test_LDADD+=-lgtest -lgtest_main
+endif
+
 check-tpm:
 	./testscripts/all.sh
 
