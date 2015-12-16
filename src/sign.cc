@@ -38,10 +38,11 @@ int
 usage(int rc)
 {
   std::cout << PACKAGE_STRING << std::endl
-            << "Usage: " << argv0base << " [ -hs ] -f <data> -k <keyfile>\n"
+            << "Usage: " << argv0base << " [ -hrs ] -f <data> -k <keyfile>\n"
             << "    -f <data file>    File to sign.\n"
             << "    -h, --help        Show this help text.\n"
             << "    -k <keyfile>      File containing key data.\n"
+            << "    -r                Raw.\n"
             << "    -s                Prompt for SRK password/PIN.\n";
   return rc;
 }
@@ -55,8 +56,12 @@ wrapped_main(int argc, char **argv)
   std::string signfile;
   bool set_srk_pin{false};
   bool set_key_pin{false};
-  while (EOF != (c = getopt(argc, argv, "hk:f:s"))) {
+  bool raw = false;
+  while (EOF != (c = getopt(argc, argv, "rhk:f:s"))) {
     switch (c) {
+    case 'r':
+      raw = true;
+      break;
     case 'h':
       return usage(0);
     case 'k':
@@ -98,11 +103,16 @@ wrapped_main(int argc, char **argv)
   if (set_key_pin) {
     key_pin = stpm::xgetpass("Enter key PIN");
   }
-  std::cout << "Loaded key: " << key << std::endl
-            << "--- Signature ---\n"
-            << stpm::to_hex(sign(key, to_sign,
-                                 set_srk_pin ? &srk_pin : NULL,
-                                 set_key_pin ? &key_pin : NULL)) << std::endl;
+  auto out = sign(key, to_sign,
+                  set_srk_pin ? &srk_pin : NULL,
+                  set_key_pin ? &key_pin : NULL);
+  if (raw) {
+    std::cout << out;
+  } else {
+    std::cout << "Loaded key: " << key << std::endl
+              << "--- Signature ---\n"
+              << stpm::to_hex(out) << std::endl;
+  }
   return 0;
 }
 /* ---- Emacs Variables ----
