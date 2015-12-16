@@ -62,6 +62,8 @@ mkdir ~/.simple-tpm-pk11/
 stpm-keygen -o ~/.simple-tpm-pk11/my.key
 ```
 
+(use `-p` if you want to set a password on the key)
+
 Try out the key:
 ```
 dd if=/dev/urandom of=to-sign bs=1 count=35
