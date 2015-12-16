@@ -78,6 +78,10 @@ wrapped_main(int argc, char **argv)
       return usage(1);
     }
   }
+  if (optind != argc) {
+    std::cerr << argv0base << ": Extra non-option args not allowed.\n";
+    return usage(1);
+  }
   if (output.empty()) {
     std::cerr << argv0base << ": Empty output file name." << std::endl;
     return usage(1);

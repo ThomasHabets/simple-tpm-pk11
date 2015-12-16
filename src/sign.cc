@@ -72,6 +72,10 @@ wrapped_main(int argc, char **argv)
       return usage(1);
     }
   }
+  if (optind != argc) {
+    std::cerr << "stpm-sign: Extra non-option args not allowed.\n";
+    return usage(1);
+  }
   if (keyfile.empty() || signfile.empty()) {
     std::cerr << "stpm-sign: Need to specify keyfile and data file"
               << std::endl;
