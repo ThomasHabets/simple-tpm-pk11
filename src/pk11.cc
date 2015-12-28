@@ -31,6 +31,7 @@
 #include<sstream>
 #include<string>
 #include<syslog.h>
+#include<stdlib.h>
 #include<vector>
 
 #include"tss/tspi.h"

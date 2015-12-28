@@ -18,12 +18,18 @@ Debian:
 ```
 apt-get install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
 ```
+
 Fedora:
 ```
 tpm-tools
 opencryptoki-devel
 trousers-devel
 openssl-devel
+```
+
+FreeBSD:
+```
+pkg install tpm-tools trousers-tddl opencryptoki openssl
 ```
 
 
@@ -119,6 +125,7 @@ Tested with
 * OpenSSH 5.9
 * OpenSSH 6.4p1 on CentOS 7.0
 * OpenSSH 6.8p1 on Arch Linux
+* OpenSSH 6.6.1p1 on FreeBSD 11-CURRENT
 
 
 TODO

@@ -26,6 +26,7 @@
 #include<string>
 #include<termios.h>
 #include<unistd.h>
+#include<libgen.h>
 #include<vector>
 
 #include"openssl/rsa.h"

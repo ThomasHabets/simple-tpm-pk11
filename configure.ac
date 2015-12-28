@@ -55,7 +55,18 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 LT_INIT(libtool)
 
-CXXFLAGS="$CXXFLAGS -std=gnu++0x -Wall"
+CXXFLAGS="$CXXFLAGS -std=c++11 -Wall -fstack-protector-all -fPIC -fPIE"
+LDFLAGS="$LDFLAGS -pie"
+
+case $host_os in
+  freebsd*)
+    CC=cc
+    CXX=c++
+    CXXCPP=cpp
+    CXXFLAGS="$CXXFLAGS -stdlib=libc++ -I/usr/local/include"
+    LDFLAGS="$LDFLAGS -L/usr/local/lib"
+    ;;
+esac
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([doc/Makefile])
