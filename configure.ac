@@ -55,7 +55,7 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 LT_INIT(libtool)
 
-CXXFLAGS="$CXXFLAGS -std=c++11 -Wall -fstack-protector-all -fPIC -fPIE"
+CXXFLAGS="$CXXFLAGS -std=gnu++0x -Wall -fstack-protector-all -fPIC -fPIE"
 LDFLAGS="$LDFLAGS -pie"
 
 case $host_os in
