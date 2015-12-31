@@ -45,6 +45,9 @@ AS_IF([test "x$WITH_PRECOMPILED_GTEST" = "xyes"], [
     AC_DEFINE([PRECOMPILED_GTEST], [], ["build using precompiled gtest library"])
 ])
 
+: ${CC=cc}
+: ${CXX=c++}
+: ${LD=ld}
 AC_PROG_CXX
 AC_PROG_INSTALL
 AC_SUBST([AM_CXXFLAGS])
@@ -55,16 +58,12 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 LT_INIT(libtool)
 
-CXXFLAGS="$CXXFLAGS -std=gnu++0x -Wall -fstack-protector-all -fPIC -fPIE"
-LDFLAGS="$LDFLAGS -pie"
+CXXFLAGS="-I/usr/local/include -std=gnu++0x -Wall -fstack-protector-all -fPIC -fPIE $CXXFLAGS"
+LDFLAGS="-L/usr/local/lib -pie $LDFLAGS"
 
 case $host_os in
   freebsd*)
-    CC=cc
-    CXX=c++
-    CXXCPP=cpp
-    CXXFLAGS="$CXXFLAGS -stdlib=libc++ -I/usr/local/include"
-    LDFLAGS="$LDFLAGS -L/usr/local/lib"
+    CXXFLAGS="-stdlib=libc++ $CXXFLAGS"
     ;;
 esac
 
