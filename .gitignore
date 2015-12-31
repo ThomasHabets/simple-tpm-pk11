@@ -2,12 +2,17 @@
 *.o
 *.lo
 *.la
+*.in
 Makefile
+aclocal.m4
 autom4te.cache
 config.h
 config.log
 config.status
+configure
 libtool
+m4
+doc/Makefile.in
 .deps
 .libs
 stamp-h1

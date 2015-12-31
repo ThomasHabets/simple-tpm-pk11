@@ -23,6 +23,7 @@
 #include<fstream>
 #include<iostream>
 #include<unistd.h>
+#include<cerrno>
 
 #include"common.h"
 #include"internal.h"
