@@ -30,7 +30,7 @@ openssl-devel
 Build simple-tpm-pk11
 ---------------------
 ```
-./configure && make && sudo make install
+./bootstrap.sh && make && sudo make install
 ```
 
 
