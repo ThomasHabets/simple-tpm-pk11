@@ -18,6 +18,7 @@
 #include"config.h"
 #endif
 
+#include<cerrno>
 #include<cstring>
 #include<cstdlib>
 #include<fstream>

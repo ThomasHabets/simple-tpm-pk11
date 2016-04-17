@@ -23,6 +23,7 @@
  * simple-tpm-pk11 code which is C++.
  */
 #include<cstdio>
+#include<cstdlib>
 #include<cstring>
 #include<ctime>
 #include<fstream>
