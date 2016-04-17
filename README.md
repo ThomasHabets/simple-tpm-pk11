@@ -1,9 +1,8 @@
-Simple TPM PK11
-===============
+# Simple TPM PK11
 
 A simple library for using the TPM chip to secure SSH keys.
 
-Copyright 2013 Google Inc. All Rights Reserved.
+Copyright 2013-2016 Google Inc. All Rights Reserved.
 Apache 2.0 license.
 
 This is NOT a Google product.
@@ -12,32 +11,35 @@ Contact: thomas@habets.se / habets@google.com
 https://github.com/ThomasHabets/
 
 
-Install dependencies
---------------------
-Debian:
-```
+## Install dependencies
+
+### Debian
+```shell
 apt-get install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
 ```
-Fedora:
-```
+
+### Fedora
+```shell
 tpm-tools
 opencryptoki-devel
 trousers-devel
 openssl-devel
 ```
 
-
-Build simple-tpm-pk11
----------------------
+### FreeBSD
+```shell
+pkg install tpm-tools trousers-tddl opencryptoki openssl
 ```
+
+## Build simple-tpm-pk11
+```shell
 ./configure && make && sudo make install
 ```
 
 
-Init TPM chip
--------------
+## Init TPM chip
 1. If you have not taken ownership, do so.
-```
+```shell
 tpm_takeownership -z
 Enter owner password: [enter something secret here]
 Confirm password: [enter something secret here]
@@ -47,14 +49,13 @@ Confirm password: [enter something secret here]
    specify a password but it's easier it you don't. The SRK password is only
    used to allow crypto operations. You still need blobs and key passwords to
    use other peoples keys.
-```
+```shell
 tpm_changeownerauth -s -r
 ```
 
 If you get any error messages, see read TPM-TROUBLESHOOTING.
 
-User setup
-----------
+## User setup
 
 ### 1. Create key
 ```
@@ -98,13 +99,12 @@ Host *
 ```
 
 then try:
-```
+```shell
 ssh shell.example.com
 ```
 
 
-Tested with
------------
+## Tested with
 
 ### Machines
 * Lenovo T410 / STM TPM 1.2.8.16
@@ -119,10 +119,10 @@ Tested with
 * OpenSSH 5.9
 * OpenSSH 6.4p1 on CentOS 7.0
 * OpenSSH 6.8p1 on Arch Linux
+* OpenSSH 6.6.1p1 on FreeBSD 11-CURRENT
 
 
-TODO
-----
+## TODO
 * Clean up code.
 * config option: log to stdout and/or stderr in addition to logfile.
 * Install in the correct place.
@@ -139,8 +139,7 @@ TODO
 * Make it work with encrypted home directories, and document.
 
 
-Reference links
----------------
+## Reference links
 * http://secgroup.ext.dsi.unive.it/projects/security-apis/tookan/
 * http://secgroup.ext.dsi.unive.it/projects/security-apis/cryptokix/
 * http://trousers.sourceforge.net/pkcs11.html
@@ -153,16 +152,14 @@ Reference links
 * http://trousers.sourceforge.net/dev_faq.html
 
 
-Make new release
-----------------
+## Make new release
 * Update configure.ac with new version, commit.
 * git tag -a -s 0.0x
 * git push --tags
 
 
-Some random notes, not instructions
------------------------------------
-```
+## Some random notes, not instructions
+```shell
 openssl genrsa -out rsa-key 2048
 openssl rsa -in rsa-key -modulus
 exponent is always 65537.
