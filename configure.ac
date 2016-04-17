@@ -55,7 +55,7 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 LT_INIT(libtool)
 
-CXXFLAGS="$CXXFLAGS -std=gnu++0x -Wall"
+CXXFLAGS="-std=gnu++0x -Wall $CXXFLAGS"
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([doc/Makefile])
