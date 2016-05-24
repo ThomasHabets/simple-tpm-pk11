@@ -13,11 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include"config.h"
 #include"gtest/gtest.h"
 
 #include"test_util.h"
 
 extern std::string argv0base;
+
+static void
+reset_getopt()
+{
+#if HAVE_DECL_OPTRESET
+  optreset = 1;
+#endif
+  optind = 1;
+}
 
 namespace fake_tspi_data {
   extern int keysize;
@@ -29,7 +39,7 @@ TEST(Usage, NoOpts)
 {
   argv0base = "foobinary";
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     NULL,
@@ -43,7 +53,7 @@ TEST(Usage, NoOpts)
 TEST(Usage, HelpOpts)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     (char*)"-h",
@@ -59,7 +69,7 @@ TEST(Keygen, EmptyOutputName)
 {
   argv0base = "foobinary";
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     (char*)"-o",
@@ -75,7 +85,7 @@ TEST(Keygen, EmptyOutputName)
 TEST(Keygen, BadOutputName)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     (char*)"-o",
@@ -93,7 +103,7 @@ TEST(Keygen, BadOutputName)
 TEST(Keygen, OK)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     (char*)"-o",
@@ -110,7 +120,7 @@ TEST(Keygen, OK)
 TEST(Keygen, SWKeyOK)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     (char*)"-S",
@@ -127,7 +137,7 @@ TEST(Keygen, SWKeyOK)
 TEST(Keygen, SmallerKey)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     (char*)"-b",
@@ -147,7 +157,7 @@ TEST(Keygen, SmallerKey)
 TEST(Keygen, WrongTPMKeySize)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"keygen",
     (char*)"-b",

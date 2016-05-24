@@ -13,17 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include"config.h"
 #include<stdexcept>
 #include"gtest/gtest.h"
 
 #include"test_util.h"
+
+static void
+reset_getopt()
+{
+#if HAVE_DECL_OPTRESET
+  optreset = 1;
+#endif
+  optind = 1;
+}
 
 extern int wrapped_main(int, char**);
 
 TEST(Usage, NoOpts)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     NULL,
@@ -37,7 +47,7 @@ TEST(Usage, NoOpts)
 TEST(Sign, NoDataFile)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     (char*)"-k",
@@ -53,7 +63,7 @@ TEST(Sign, NoDataFile)
 TEST(Sign, NoKeyFile)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     (char*)"-f",
@@ -69,7 +79,7 @@ TEST(Sign, NoKeyFile)
 TEST(Usage, HelpOpts)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     (char*)"-h",
@@ -84,7 +94,7 @@ TEST(Usage, HelpOpts)
 TEST(Sign, BadKeyfileName)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     (char*)"-k",
@@ -103,7 +113,7 @@ TEST(Sign, BadKeyfileName)
 TEST(Sign, BadDatafileName)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     (char*)"-k",
@@ -123,7 +133,7 @@ TEST(Sign, BadDatafileName)
 TEST(Sign, BadKeyfile)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     (char*)"-k",
@@ -149,7 +159,7 @@ TEST(Sign, BadKeyfile)
 TEST(Sign, OK)
 {
   CaptureStreams s;
-  optind = 0;
+  reset_getopt();
   char *argv[] = {
     (char*)"sign",
     (char*)"-k",
