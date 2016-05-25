@@ -106,21 +106,22 @@ ssh shell.example.com
 
 ## Tested with
 
-### Machines
-* Lenovo T410 / STM TPM 1.2.8.16
-* Lenovo T500 / INTC STM 1.2.4.1
+### Hardware
 * Dell Precision T3500 / WEC TPM 1.2.2.81
+* HP Z440 / IFX TPM 1.2.4.40
+* Lenovo T410 / STM TPM 1.2.8.16
 * Lenovo T440s / STM TPM 1.2.13.12
-* Lenovo X240 / STM TPM 1.2.13.12
+* Lenovo T500 / INTC STM 1.2.4.1
 * Lenono X200s / INTC TPM 1.2.4.1
+* Lenovo X240 / STM TPM 1.2.13.12
 
 ### Software
-* OpenSSH 6.0p1 on Debian 7.2
 * OpenSSH 5.9
+* OpenSSH 6.0p1 on Debian 7.2
 * OpenSSH 6.4p1 on CentOS 7.0
-* OpenSSH 6.8p1 on Arch Linux
 * OpenSSH 6.6.1p1 on FreeBSD 11-CURRENT
-
+* OpenSSH 6.8p1 on Arch Linux
+* OpenSSH 7.1p2 on Debian
 
 ## TODO
 * Clean up code.
