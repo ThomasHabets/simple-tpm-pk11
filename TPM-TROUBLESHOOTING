@@ -45,3 +45,11 @@ Solution
   inactive you may need to turn it on in the BIOS. If that doesn't
   work, try clearing it and starting from scratch.
 ---
+Problem
+  After re-installation of the operating system the key is not found.
+  ssh server
+  C_GetTokenInfo failed: 6 no keys 
+Solution
+  The base library trousers saves some part of the key on the local filesystem.
+  https://sourceforge.net/p/trousers/mailman/message/28828649/
+  Copy the file /var/lib/tpm/system.data as root to your new system.
