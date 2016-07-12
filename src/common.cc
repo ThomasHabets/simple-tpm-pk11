@@ -114,7 +114,7 @@ std::string
 xgetpass(const std::string& prompt)
 {
   const int fd = STDIN_FILENO;
-  std::cout << prompt << ": " << std::flush;
+  std::cerr << prompt << ": " << std::flush;
   std::string line;
   if (!isatty(fd)) {
     getline(std::cin, line);
@@ -134,7 +134,7 @@ xgetpass(const std::string& prompt)
       throw std::runtime_error(std::string("tcsetattr(stdin, TCSAFLUSH, old): ") + strerror(errno));
     }
   }
-  std::cout << std::endl;
+  std::cerr << std::endl;
   return line;
 }
 
