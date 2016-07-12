@@ -69,6 +69,8 @@ Try out the key:
 ```
 dd if=/dev/urandom of=to-sign bs=1 count=35
 stpm-sign -k ~/.simple-tpm-pk11/my.key -f to-sign
+stpm-sign -k ~/.simple-tpm-pk11/my.key -f to-sign -r > to-sign.sig
+stpm-verify -f to-sign -k ~/.simple-tpm-pk11/my.key -s to-sign.sig
 ```
 
 ### 2. Create config

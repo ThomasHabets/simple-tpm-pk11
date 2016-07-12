@@ -91,6 +91,11 @@ std::string sign(const Key& key, const std::string& data,
                  const std::string* srk_pin,
                  const std::string* key_pin);
 
+// Verify signature.
+// This is a software-only operation.
+bool verify(const Key& key, const std::string& data,
+            const std::string& sig);
+
 // Exfiltrate key
 // If a PIN is NULL, use the Well Known Secret (20 null bytes unhashed).
 SoftwareKey exfiltrate_key(const Key& key,

@@ -29,8 +29,11 @@
 #include<unistd.h>
 #include<vector>
 
-#include"openssl/rsa.h"
+#include"openssl/err.h"
 #include"openssl/rand.h"
+#include"openssl/rsa.h"
+#include"openssl/x509.h"
+
 #include"tss/tspi.h"
 #include"trousers/trousers.h"
 
@@ -191,6 +194,16 @@ bn2string(const BIGNUM* bn)
     throw std::runtime_error("Broken BIGNUM sent to BN_bn2bin.");
   }
   return std::string(buf.begin(), buf.end());
+}
+
+BIGNUM*
+string2bn(const std::string& s)
+{
+  BIGNUM* ret = BN_new();
+  if (!BN_bin2bn(reinterpret_cast<const unsigned char*>(s.data()), s.size(), ret)) {
+    throw std::runtime_error("Broken BIGNUM sent to BN_bin2bn.");
+  }
+  return ret;
 }
 
 std::string
@@ -682,6 +695,55 @@ sign(const Key& key, const std::string& data,
   }
   TSCALL(Tspi_Hash_Sign, hash, sign, &sig_size, &sig_blob);
   return std::string{sig_blob, sig_blob+sig_size};
+}
+
+class Defer {
+ public:
+  Defer(std::function<void()> f): f_(f) {}
+  ~Defer()
+  {
+    try {
+      f_();
+    } catch (const std::exception& e) {
+      std::clog << "Exception thrown in deferred code.\n";
+      throw;
+    }
+  }
+ private:
+  std::function<void()> f_;
+};
+
+std::string
+public_decrypt(const Key& key, const std::string& sig)
+{
+  // Load key.
+  RSA *rsa = RSA_new();
+  Defer dfr([&rsa]{RSA_free(rsa);});
+  rsa->n = string2bn(key.modulus);
+  rsa->e = string2bn(key.exponent);
+
+  // Decrypt signature.
+  std::vector<unsigned char> d(RSA_size(rsa));
+  const int len = RSA_public_decrypt(
+      sig.size(),
+      reinterpret_cast<const unsigned char*>(sig.data()),
+      &d[0],
+      rsa,
+      RSA_PKCS1_PADDING);
+  if (len < 0) {
+    throw std::runtime_error(xsprintf("RSA_public_decrypt failed: %s", ERR_error_string(ERR_get_error(), NULL)));
+  }
+  return std::string{&d[0], &d[len]};
+}
+
+bool
+verify(const Key& key, const std::string& data, const std::string& sig)
+{
+  // TODO: Make this comparison constant time.
+  if (data != public_decrypt(key, sig)) {
+    return false;
+  }
+  return true;
 }
 END_NAMESPACE(stpm);
 /* ---- Emacs Variables ----
