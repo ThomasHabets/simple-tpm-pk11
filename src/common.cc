@@ -61,7 +61,7 @@ operator<<(std::ostream& o, const struct stpm::SoftwareKey& key)
 
 BEGIN_NAMESPACE(stpm);
 const std::string random_device = "/dev/urandom";
-const int num_random_bytes = 32; // 256 bits.
+const int num_random_bytes = 10240; // 10*8192 bits.
 const char* env_log_stderr = "SIMPLE_TPM_PK11_LOG_STDERR";
 const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
@@ -410,9 +410,12 @@ generate_key(const std::string* srk_pin, const std::string* key_pin, int bits) {
   TPMStuff stuff{srk_pin};
 
   { // Get some random data and seed the TPM with it.
-    const std::string entropy = xrandom(num_random_bytes);
-    TSCALL(Tspi_TPM_StirRandom, stuff.tpm(),
-           entropy.size(), (BYTE*)entropy.data());
+    const int chunk = 32;
+    for (int left =  num_random_bytes; left > 0; left -= chunk) {
+      const std::string entropy = xrandom(chunk);
+      TSCALL(Tspi_TPM_StirRandom, stuff.tpm(),
+             entropy.size(), (BYTE*)entropy.data());
+    }
   }
 
   // === Set up key object ===
