@@ -65,6 +65,51 @@ const int num_random_bytes = 32; // 256 bits.
 const char* env_log_stderr = "SIMPLE_TPM_PK11_LOG_STDERR";
 const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
+BEGIN_NAMESPACE();
+template<typename T, T*(*New)(), void(*Free)(T*)>
+class AutoFree {
+ public:
+  AutoFree(): resource_(New()) {}
+  AutoFree(T* r): resource_(r) {}
+  AutoFree(const AutoFree&) = delete;
+  AutoFree(const AutoFree&&) = delete;
+  AutoFree& operator=(const AutoFree&) = delete;
+  AutoFree& operator=(const AutoFree&&) = delete;
+  ~AutoFree()
+  {
+    if (!resource_) {
+      return;
+    }
+    try {
+      Free(resource_);
+      resource_ = nullptr;
+    } catch (const std::exception& e) {
+      std::clog << "Exception thrown in free() code.\n";
+      throw;
+    }
+  }
+  T* get() const
+  {
+    return resource_;
+  }
+  T* operator->() const
+  {
+    return resource_;
+  }
+  T* release()
+  {
+    T* ret = resource_;
+    resource_ = nullptr;
+    return ret;
+  }
+ private:
+  T* resource_;
+};
+
+typedef AutoFree<RSA, RSA_new, RSA_free> RSAWrap;
+typedef AutoFree<BIGNUM, BN_new, BN_free> BIGNUMWrap;
+END_NAMESPACE();
+
 std::string
 xgetpass(const std::string& prompt)
 {
@@ -199,11 +244,11 @@ bn2string(const BIGNUM* bn)
 BIGNUM*
 string2bn(const std::string& s)
 {
-  BIGNUM* ret = BN_new();
-  if (!BN_bin2bn(reinterpret_cast<const unsigned char*>(s.data()), s.size(), ret)) {
+  BIGNUMWrap ret;
+  if (!BN_bin2bn(reinterpret_cast<const unsigned char*>(s.data()), s.size(), ret.get())) {
     throw std::runtime_error("Broken BIGNUM sent to BN_bin2bn.");
   }
-  return ret;
+  return ret.release();
 }
 
 std::string
@@ -281,10 +326,10 @@ generate_software_key(int bits)
     throw std::runtime_error("OpenSSL PRNG wants more entropy");
   }
 
-  RSA *rsa = RSA_new();
-  BIGNUM *f4 = BN_new();
-  BN_set_word(f4, RSA_F4);
-  if (!RSA_generate_key_ex(rsa, bits, f4, NULL)) {
+  RSAWrap rsa;
+  BIGNUMWrap f4;
+  BN_set_word(f4.get(), RSA_F4);
+  if (!RSA_generate_key_ex(rsa.get(), bits, f4.get(), NULL)) {
     throw std::runtime_error("RSA_generate_key_ex failed");
   }
   SoftwareKey swkey;
@@ -322,7 +367,7 @@ wrap_key(const std::string* srk_pin, const std::string* key_pin,
   // Load SRK public key.
   {
     UINT32 pubKeySize;
-    BYTE *pubKey;
+    BYTE *pubKey = nullptr;
     TSCALL(Tspi_Key_GetPubKey, stuff.srk(), &pubKeySize, &pubKey);
     Tspi_Context_FreeMemory(stuff.ctx(), pubKey);
   }
@@ -697,38 +742,21 @@ sign(const Key& key, const std::string& data,
   return std::string{sig_blob, sig_blob+sig_size};
 }
 
-class Defer {
- public:
-  Defer(std::function<void()> f): f_(f) {}
-  ~Defer()
-  {
-    try {
-      f_();
-    } catch (const std::exception& e) {
-      std::clog << "Exception thrown in deferred code.\n";
-      throw;
-    }
-  }
- private:
-  std::function<void()> f_;
-};
-
 std::string
 public_decrypt(const Key& key, const std::string& sig)
 {
   // Load key.
-  RSA *rsa = RSA_new();
-  Defer dfr([&rsa]{RSA_free(rsa);});
+  RSAWrap rsa;
   rsa->n = string2bn(key.modulus);
   rsa->e = string2bn(key.exponent);
 
   // Decrypt signature.
-  std::vector<unsigned char> d(RSA_size(rsa));
+  std::vector<unsigned char> d(RSA_size(rsa.get()));
   const int len = RSA_public_decrypt(
       sig.size(),
       reinterpret_cast<const unsigned char*>(sig.data()),
       &d[0],
-      rsa,
+      rsa.get(),
       RSA_PKCS1_PADDING);
   if (len < 0) {
     throw std::runtime_error(xsprintf("RSA_public_decrypt failed: %s", ERR_error_string(ERR_get_error(), NULL)));
