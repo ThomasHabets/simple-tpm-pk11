@@ -190,11 +190,7 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
                         i, key.modulus.size());
       pTemplate[i].ulValueLen = key.modulus.size();
       if (pTemplate[i].pValue) {
-        BIGNUM *bnm = NULL;
-        // TODO: copy, instead of converting back and forth.
-        BN_hex2bn(&bnm, stpm::to_hex(key.modulus).c_str());
-        unsigned mlen = BN_bn2bin(bnm, (unsigned char*)pTemplate[i].pValue);
-        assert(mlen == key.modulus.size());
+        memcpy(pTemplate[i].pValue, key.modulus.data(), key.modulus.size());
       }
       break;
 
@@ -203,11 +199,7 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
                         i, key.exponent.size());
       pTemplate[i].ulValueLen = key.exponent.size();
       if (pTemplate[i].pValue) {
-        BIGNUM *bne = NULL;
-        // TODO: copy, instead of converting back and forth.
-        BN_hex2bn(&bne, stpm::to_hex(key.exponent).c_str());
-        unsigned elen = BN_bn2bin(bne, (unsigned char*)pTemplate[i].pValue);
-        assert(elen == key.exponent.size());
+        memcpy(pTemplate[i].pValue, key.exponent.data(), key.exponent.size());
       }
       break;
 
