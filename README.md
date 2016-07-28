@@ -105,6 +105,17 @@ then try:
 ssh shell.example.com
 ```
 
+### 4a. Alternatively, add the TPM to your `ssh-agent`
+
+This has to be the OpenSSH `ssh-agent`, since gnome-keyring doesn't support
+PKCS#11. A sign that you run gnome-keyring (or your OpenSSH is compiled
+without PKCS#11 support) is that you see this error message when you try:
+
+```
+$ ssh-add -s /…/libsimple-tpm-pk11.so
+Enter passphrase for PKCS#11: 
+Could not add card "/…/libsimple-tpm-pk11.so": agent refused operation
+```
 
 ## Tested with
 
