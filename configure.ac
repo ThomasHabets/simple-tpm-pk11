@@ -60,7 +60,10 @@ AC_ENABLE_SHARED
 AC_DISABLE_STATIC
 LT_INIT(libtool)
 
+AC_CHECK_FUNCS([RSA_get0_key RSA_set0_key RSA_get0_factors])
+
 CXXFLAGS="-std=gnu++0x -Wall $CXXFLAGS"
+
 
 AC_CONFIG_FILES([Makefile])
 AC_CONFIG_FILES([doc/Makefile])

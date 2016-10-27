@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include"config.h"
+
 #include<cstdarg>
 #include<cstdio>
 #include<cstring>
@@ -30,6 +32,7 @@
 #include<vector>
 
 #include"openssl/err.h"
+#include"openssl/ossl_typ.h"
 #include"openssl/rand.h"
 #include"openssl/rsa.h"
 #include"openssl/x509.h"
@@ -40,6 +43,52 @@
 #include"common.h"
 #include"tspiwrap.h"
 #include"internal.h"
+
+namespace {
+
+// In OpenSSL 1.1 these functions replaced direct access to internals
+// of the `RSA` struct.
+// This is local implementations so that we can still build under
+// OpenSSL 1.0.
+#ifndef HAVE_RSA_SET0_KEY
+int
+RSA_set0_key(RSA *rsa, BIGNUM *n, BIGNUM *e, BIGNUM *d)
+{
+  rsa->n = n;
+  rsa->e = e;
+  rsa->d = d;
+  return 0;
+}
+#endif
+#ifndef HAVE_RSA_GET0_KEY
+void
+RSA_get0_key(RSA *rsa, const BIGNUM **n, const BIGNUM **e, const BIGNUM **d)
+{
+  if (n) {
+    *n = rsa->n;
+  }
+  if (e) {
+    *e = rsa->e;
+  }
+  if (d) {
+    *d = rsa->d;
+  }
+}
+#endif
+#ifndef HAVE_RSA_GET0_FACTORS
+void
+RSA_get0_factors(const RSA *rsa, const BIGNUM **p, const BIGNUM **q)
+{
+  if (p != NULL) {
+    *p = rsa->p;
+  }
+  if (q != NULL) {
+    *q = rsa->q;
+  }
+}
+#endif
+}
+
 
 std::ostream&
 operator<<(std::ostream& o, const struct stpm::Key& key)
@@ -333,9 +382,13 @@ generate_software_key(int bits)
     throw std::runtime_error("RSA_generate_key_ex failed");
   }
   SoftwareKey swkey;
-  swkey.modulus = bn2string(rsa->n);
-  swkey.key = bn2string(rsa->p);
-  swkey.exponent = bn2string(rsa->e);
+  BIGNUM *m, *e;
+  RSA_get0_key(rsa.get(), const_cast<const BIGNUM**>(&m), const_cast<const BIGNUM**>(&e), NULL);
+  swkey.modulus = bn2string(m);
+  swkey.exponent = bn2string(e);
+  BIGNUM *p;
+  RSA_get0_factors(rsa.get(), const_cast<const BIGNUM**>(&p), NULL);
+  swkey.key = bn2string(p);
   return swkey;
 }
 
@@ -750,8 +803,10 @@ public_decrypt(const Key& key, const std::string& sig)
 {
   // Load key.
   RSAWrap rsa;
-  rsa->n = string2bn(key.modulus);
-  rsa->e = string2bn(key.exponent);
+  if (RSA_set0_key(rsa.get(), string2bn(key.modulus), string2bn(key.exponent),
+                   NULL)) {
+    throw std::runtime_error("RSA_set0_key failed");
+  }
 
   // Decrypt signature.
   std::vector<unsigned char> d(RSA_size(rsa.get()));
