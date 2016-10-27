@@ -1,5 +1,5 @@
 AC_PREREQ(2.61)
-AC_INIT([simple-tpm-pk11], [0.04], [thomas@habets.se])
+AC_INIT([simple-tpm-pk11], [0.05], [thomas@habets.se])
 AC_CONFIG_AUX_DIR([m4])
 AC_CONFIG_MACRO_DIR([m4])
 AM_INIT_AUTOMAKE([foreign subdir-objects])
