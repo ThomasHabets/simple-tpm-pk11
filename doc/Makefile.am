@@ -1,6 +1,6 @@
 AUTOMAKE_OPTIONS=foreign
 DISTCLEANFILES=*~
-man_MANS=stpm-keygen.1 stpm-sign.1 stpm-exfiltrate.1 simple-tpm-pk11.7
+man_MANS=stpm-keygen.1 stpm-sign.1 stpm-verify.1 stpm-exfiltrate.1 simple-tpm-pk11.7
 
 EXTRA_DIST=$(man_MANS)
 

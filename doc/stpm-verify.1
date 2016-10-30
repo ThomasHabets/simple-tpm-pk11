@@ -1,0 +1,48 @@
+.TH "stpm\-verify" "1" "1th December, 2013" "simple\-tpm\-pk11" ""
+.SH "NAME"
+stpm\-verify \- Verify data using the TPM chip
+.PP 
+.SH "SYNOPSIS"
+\fBstpm\-verify\fP [ \-hq ] \-f \fIdata\fP \-s \fIsig file\fP \-k <key file>
+.PP 
+.SH "DESCRIPTION"
+\fIstpm\-verify\fP verifies data signed by \fIstpm\-sign\fP\&.
+.PP 
+This program is mostly made for debugging, to make sure that the TPM
+is set up correctly and a valid key was generated\&.
+.PP 
+.SH "OPTIONS"
+.IP "\-h"
+Show usage info\&.
+.IP "\-f \fIdata file\fP"
+File containing data to be verified\&.
+.IP "\-s \fIsig file\fP"
+File containing signature from \fIstpm\-sign\fP\&.
+.IP "\-k \fIkey file\fP"
+File containing the encrypted key blob\&.
+
+.PP 
+.SH "EXAMPLES"
+.nf
+.sp
+dd if=/dev/urandom of=to\-sign bs=1 count=35
+stpm\-sign \-k ~/\&.simple\-tpm\-pk11/my\&.key \-f to\-sign \-r > to\-sign\&.sig
+stpm\-verify \-f to\-sign \-k ~/\&.simple\-tpm\-pk11/my\&.key \-s to\-sign\&.sig
+.PP 
+.fi
+.in
+.PP 
+.SH "DIAGNOSTICS"
+Most errors will probably be related to interacting with the TPM chip\&.
+Resetting the TPM chip and taking ownership should take care of most
+of them\&. See the \fITPM\-TROUBLESHOOTING\fP section of
+\fBsimple\-tpm\-pk11(7)\fP\&.
+.PP 
+.SH "SEE ALSO"
+\fBsimple\-tpm\-pk11(7)\fP, \fBstpm\-keygen(1)\fP, \fBstpm\-sign(1)\fP\&.
+.PP 
+.SH "AUTHOR"
+Simple\-TPM\-PK11 was written By Thomas Habets <habets@google\&.com>
+/ <thomas@habets\&.se>\&.
+.PP 
+git clone https://github\&.com/ThomasHabets/simple\-tpm\-pk11\&.git

@@ -14,7 +14,7 @@ manpagedescription()
 manpageoptions()
 startdit()
     dit(-h) Show usage info.
-    dit(-f em(input file)) File containing dato to be signed.
+    dit(-f em(input file)) File containing data to be signed.
     dit(-k) Key to sign with. The key is generated with em(stpm-keysign).
     dit(-s) Ask for the SRK password interactively. By default the
         "Well Known Secret" (20 nulls) is used. The SRK password is an
@@ -22,7 +22,7 @@ startdit()
         operation that involves the TPM, and an actual secret password
         is usually not required or useful.
 enddit()
- 
+
 manpagesection(EXAMPLES)
 mancommand(.nf)
 mancommand(.sp)
@@ -45,7 +45,7 @@ manpagediagnostics()
     bf(simple-tpm-pk11(7)).
 
 manpageseealso()
-    bf(simple-tpm-pk11(7)), bf(stpm-keygen(1)).
+    bf(simple-tpm-pk11(7)), bf(stpm-keygen(1)), bf(stpm-verify(1)).
 
 manpageauthor()
     Simple-TPM-PK11 was written By Thomas Habets <habets@google.com>

@@ -1,0 +1,44 @@
+manpage(stpm-verify)(1)(1th December, 2013)(simple-tpm-pk11)()
+manpagename(stpm-verify)(Verify data using the TPM chip)
+
+manpagesynopsis()
+    bf(stpm-verify) [ -hq ] -f em(data) -s em(sig file) -k <key file>
+
+manpagedescription()
+    em(stpm-verify) verifies data signed by em(stpm-sign).
+
+    This program is mostly made for debugging, to make sure that the TPM
+    is set up correctly and a valid key was generated.
+
+manpageoptions()
+startdit()
+    dit(-h) Show usage info.
+    dit(-f em(data file)) File containing data to be verified.
+    dit(-s em(sig file)) File containing signature from em(stpm-sign).
+    dit(-k em(key file)) File containing the encrypted key blob.
+enddit()
+
+manpagesection(EXAMPLES)
+mancommand(.nf)
+mancommand(.sp)
+    dd if=/dev/urandom of=to-sign bs=1 count=35
+    stpm-sign -k ~/.simple-tpm-pk11/my.key -f to-sign -r > to-sign.sig
+    stpm-verify -f to-sign -k ~/.simple-tpm-pk11/my.key -s to-sign.sig
+
+mancommand(.fi)
+mancommand(.in)
+
+manpagediagnostics()
+    Most errors will probably be related to interacting with the TPM chip.
+    Resetting the TPM chip and taking ownership should take care of most
+    of them. See the em(TPM-TROUBLESHOOTING) section of
+    bf(simple-tpm-pk11(7)).
+
+manpageseealso()
+    bf(simple-tpm-pk11(7)), bf(stpm-keygen(1)), bf(stpm-sign(1)).
+
+manpageauthor()
+    Simple-TPM-PK11 was written By Thomas Habets <habets@google.com>
+    / <thomas@habets.se>.
+
+    git clone https://github.com/ThomasHabets/simple-tpm-pk11.git

@@ -21,3 +21,4 @@ stamp-h1
 stpm-keygen
 stpm-sign
 stpm-exfiltrate
+stpm-verify
