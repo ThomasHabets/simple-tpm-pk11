@@ -6,7 +6,7 @@ manpagesynopsis()
 
 manpagedescription()
     em(stpm-keygen) generates a 2048 RSA key inside the TPM chip, and saves
-    the public key and the SRK-encrypted private key (the "blob") in the
+    the public key and the SRK-encrypted key blob in the
     em(output file).
 
 manpageoptions()
