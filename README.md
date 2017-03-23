@@ -49,6 +49,10 @@ Confirm password: [enter something secret here]
    specify a password but it's easier it you don't. The SRK password is only
    used to allow crypto operations. You still need blobs and key passwords to
    use other peoples keys.
+   
+   The "SRK password" is needed to be able to do operations with the "SRK",
+   which is the actual cryptographic key. The user has no access to the SRK
+   directly. The same goes for other keys protected by the TPM chip.
 ```shell
 tpm_changeownerauth -s -r
 ```
