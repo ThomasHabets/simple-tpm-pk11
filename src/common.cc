@@ -242,7 +242,7 @@ TSPIException::code_to_extra(int code)
       "  with srk_pin in the configuration file for the PKCS#11 module.";
   case TSS_LAYER_TSP | TSS_E_COMM_FAILURE:
     return "Likely problem:\n"
-      "  The tscd daemon is not running and listening on TCP port 30003, or there\n"
+      "  The tcsd daemon is not running and listening on TCP port 30003, or there\n"
       "  is a firewall preventing connections to it.\n"
       "Possible solution:\n"
       "  Make sure trousers is started (/etc/init.d/trousers start) correctly, and\n"
