@@ -115,7 +115,7 @@ const char* env_log_stderr = "SIMPLE_TPM_PK11_LOG_STDERR";
 const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
 BEGIN_NAMESPACE();
-template<typename T, T*(*New)(), void(*Free)(T*)>
+template<typename T, T*(*New)(), void(*Free)(T*) noexcept>
 class AutoFree {
  public:
   AutoFree(): resource_(New()) {}
@@ -129,13 +129,8 @@ class AutoFree {
     if (!resource_) {
       return;
     }
-    try {
-      Free(resource_);
-      resource_ = nullptr;
-    } catch (const std::exception& e) {
-      std::clog << "Exception thrown in free() code.\n";
-      throw;
-    }
+    Free(resource_);
+    resource_ = nullptr;
   }
   T* get() const
   {
