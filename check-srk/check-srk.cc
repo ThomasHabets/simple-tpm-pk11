@@ -18,7 +18,6 @@
  *
  * Compile with: g++ -o check-srk -std=gnu++11 check-srk.cc -ltspi -lssl -lcrypto
  *
- * Take output modulus and shove it into https://gist.github.com/marcan/fc87aa78085c2b6f979aefc73fdc381f
  */
 #include<cstdio>
 #include<cstdlib>
