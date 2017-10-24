@@ -16,10 +16,12 @@
 /*
  * Ugly hack to extract the SRK modulus to then check for Infineon disaster vuln.
  *
- * Compile with: g++ -o check-srk -std=gnu++11 check-srk.cc -ltspi -lssl -lcrypto
+ * Compile with:
+ *    g++ -o check-srk -std=gnu++11 check-srk.cc -ltspi -lssl -lcrypto
  *
  */
 #include<cstdio>
+#include<cmath>
 #include<cstdlib>
 #include<cstring>
 #include<iostream>
@@ -31,41 +33,64 @@
 #include<tss/tspi.h>
 #include<trousers/trousers.h>
 
-std::vector<std::pair<int, std::set<int>>> tests;
+#include"../src/common.h"
 
-void
-init_tests()
+std::vector<std::pair<int, std::set<int>>>
+make_tests()
 {
-  tests.push_back(std::pair<int, std::set<int>>(11, {1, 10}));
-  tests.push_back(std::pair<int, std::set<int>>(13, {1, 3, 4, 9, 10, 12}));
-  tests.push_back(std::pair<int, std::set<int>>(17, {1, 2, 4, 8, 9, 13, 15, 16}));
-  tests.push_back(std::pair<int, std::set<int>>(19, {1, 4, 5, 6, 7, 9, 11, 16, 17}));
-  tests.push_back(std::pair<int, std::set<int>>(37, {1, 10, 26}));
-  tests.push_back(std::pair<int, std::set<int>>(53, {1, 4, 6, 7, 9, 10, 11, 13, 15, 16, 17, 24, 25, 28, 29, 36, 37, 38, 40, 42, 43, 44, 46, 47, 49, 52}));
-  tests.push_back(std::pair<int, std::set<int>>(61, {1, 34, 3, 37, 38, 33, 8, 9, 11, 60, 50, 20, 41, 23, 24, 52, 58, 27, 28, 53}));
-  tests.push_back(std::pair<int, std::set<int>>(71, {1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 19, 20, 24, 25, 27, 29, 30, 32, 36, 37, 38, 40, 43, 45, 48, 49, 50, 54, 57, 58, 60, 64}));
-  tests.push_back(std::pair<int, std::set<int>>(73, {1, 3, 7, 8, 9, 10, 17, 21, 22, 24, 27, 30, 43, 46, 49, 51, 52, 56, 63, 64, 65, 66, 70, 72}));
-  tests.push_back(std::pair<int, std::set<int>>(79, {64, 1, 67, 38, 65, 8, 10, 46, 18, 52, 21, 22, 62}));
-  tests.push_back(std::pair<int, std::set<int>>(97, {96, 1, 35, 36, 61, 62}));
-  tests.push_back(std::pair<int, std::set<int>>(103, {1, 2, 4, 7, 8, 9, 13, 14, 15, 16, 17, 18, 19, 23, 25, 26, 28, 29, 30, 32, 33, 34, 36, 38, 41, 46, 49, 50, 52, 55, 56, 58, 59, 60, 61, 63, 64, 66, 68, 72, 76, 79, 81, 82, 83, 91, 92, 93, 97, 98, 100}));
-  tests.push_back(std::pair<int, std::set<int>>(107, {1, 3, 4, 9, 10, 11, 12, 13, 14, 16, 19, 23, 25, 27, 29, 30, 33, 34, 35, 36, 37, 39, 40, 41, 42, 44, 47, 48, 49, 52, 53, 56, 57, 61, 62, 64, 69, 75, 76, 79, 81, 83, 85, 86, 87, 89, 90, 92, 99, 100, 101, 102, 105}));
-  tests.push_back(std::pair<int, std::set<int>>(109, {1, 3, 4, 5, 7, 9, 12, 15, 16, 20, 21, 22, 25, 26, 27, 28, 29, 31, 34, 35, 36, 38, 43, 45, 46, 48, 49, 60, 61, 63, 64, 66, 71, 73, 74, 75, 78, 80, 81, 82, 83, 84, 87, 88, 89, 93, 94, 97, 100, 102, 104, 105, 106, 108}));
-  tests.push_back(std::pair<int, std::set<int>>(127, {1, 2, 4, 5, 8, 10, 16, 19, 20, 25, 27, 32, 33, 38, 40, 47, 50, 51, 54, 61, 63, 64, 66, 73, 76, 77, 80, 87, 89, 94, 95, 100, 102, 107, 108, 111, 117, 119, 122, 123, 125, 126}));
-  tests.push_back(std::pair<int, std::set<int>>(151, {1, 3, 132, 8, 9, 142, 143, 19, 20, 150, 24, 26, 27, 28, 29, 41, 44, 50, 53, 57, 59, 60, 64, 65, 67, 68, 70, 72, 73, 78, 79, 81, 83, 84, 86, 87, 91, 92, 94, 98, 131, 101, 107, 110, 148, 122, 123, 124, 125, 127}));
-  tests.push_back(std::pair<int, std::set<int>>(157, {1, 130, 3, 4, 9, 10, 11, 12, 13, 14, 143, 16, 17, 146, 19, 148, 153, 25, 154, 27, 156, 30, 31, 33, 35, 36, 37, 39, 40, 42, 44, 46, 47, 48, 49, 51, 52, 56, 57, 58, 138, 64, 67, 68, 71, 140, 75, 76, 141, 81, 82, 147, 86, 89, 90, 93, 144, 99, 100, 101, 145, 105, 106, 108, 109, 110, 111, 113, 115, 117, 118, 132, 120, 121, 122, 124, 126, 127}));
+  // Credit: https://crypto.stackexchange.com/questions/52292/what-is-fast-prime
+  const std::vector<std::pair<int, int>> generators = {
+    {2, 11},
+    {6, 13},
+    {8, 17},
+    {9, 19},
+    {3, 37},
+    {26, 53},
+    {20, 61},
+    {35, 71},
+    {24, 73},
+    {13, 79},
+    {6, 97},
+    {51, 103},
+    {53, 107},
+    {54, 109},
+    {42, 127},
+    {50, 151},
+    {78, 157},
+  };
+
+  stpm::BNCTXWrap ctx;
+  std::vector<std::pair<int, std::set<int>>> ret;
+  for (const auto& g : generators) {
+    stpm::BIGNUMWrap r, p, res, i;
+
+    BN_dec2bn(r.getp(), std::to_string(g.first).c_str());
+    BN_dec2bn(p.getp(), std::to_string(g.second).c_str());
+
+    std::set<int> l;
+    for (int c = 0; c < g.second; c++) {
+      BN_dec2bn(i.getp(), std::to_string(c).c_str());
+      BN_mod_exp(res.get(), i.get(), r.get(), p.get(), ctx.get());
+      if (!strcmp(BN_bn2dec(res.get()), "1")) {
+        l.insert(c);
+      }
+    }
+    ret.push_back({g.second, l});
+  }
+  return ret;
 }
+
+const std::vector<std::pair<int, std::set<int>>> tests = make_tests();
 
 bool
 is_vuln(BIGNUM* modulus) {
-  auto ctx = BN_CTX_new();
+  stpm::BNCTXWrap ctx;
 
-  auto m = BN_new();
-  auto s = BN_new();
-  auto z = BN_new();
+  stpm::BIGNUMWrap m, s, z;
   for (const auto ms : tests) {
-    BN_dec2bn(&m, std::to_string(ms.first).c_str());
-    BN_mod(z, modulus, m, ctx);
-    const std::string lhs = BN_bn2dec(z);
+    BN_dec2bn(m.getp(), std::to_string(ms.first).c_str());
+    BN_mod(z.get(), modulus, m.get(), ctx.get());
+    const std::string lhs = BN_bn2dec(z.get());
     char* end;
     auto n = strtoul(lhs.c_str(), &end, 10);
     if (*end) {
@@ -79,13 +104,54 @@ is_vuln(BIGNUM* modulus) {
   return true;
 }
 
-// NULL for WKS.
-const char* srk_pin = NULL;
+void
+self_test()
+{
+  std::clog << "Running self test…\n";
+  const std::string bad =
+    "19938056020098197365562045602452702481764029031788901515041637346"
+    "59664301810397435517958505193657308878577182396178388805949567514"
+    "93072326478239626428117453688560571382508192163477482599263238431"
+    "23409832353911425474214399357279154291350609095053100959029512111"
+    "18843523882986697836910369306226827544922081786889434456105668874"
+    "75559631105557876688469588507548413520336914672788668741683050708"
+    "52577071087674316932650955818705357676526040250814850835930967219"
+    "87657456512408680098709248942496286520609642408378616866232460847"
+    "82246097027454407148731567090590896088004920146482353728837014129"
+    "47627934562329911019602948939463";
+  const std::string good =
+    "10370958248394357517927560885830722492008924663624587591822132987"
+    "96780013019139759397453360064558094368183834718579254844745074698"
+    "14152191546180006061001646994710489151933960477358446164968530575"
+    "65033770341665769755559091048068263979924104921646738915200262650"
+    "78651948163902522767455462804827862036592643288146195217828089952"
+    "88806167443550955372809448344660673102522500801426337516136781403"
+    "92439851732672531048042240879559796179184971260687770238899126397"
+    "90153991157220986800506575923567680693759749035973704825051373788"
+    "95095946104093984893324803391764381923945603803100327231565213476"
+    "35531022883252286505870258531927";
+
+  stpm::BIGNUMWrap m;
+  BN_dec2bn(m.getp(), good.c_str());
+  if (is_vuln(m.get())) {
+    std::cerr << "Internal self test error: Known good was detected as bad\n";
+    exit(1);
+  }
+
+  BN_dec2bn(m.getp(), bad.c_str());
+  if (!is_vuln(m.get())) {
+    std::cerr << "Internal self test error: Known bad was detected as good\n";
+    exit(1);
+  }
+}
 
 int
 main(int argc, char** argv)
 {
-  init_tests();
+  self_test();
+
+  // NULL for WKS.
+  const char* srk_pin = NULL;
   int opt;
   while ((opt = getopt(argc, argv, "s:")) != -1) {
     switch (opt) {
@@ -206,17 +272,23 @@ main(int argc, char** argv)
       fprintf(stderr, "Failed to get SRK modulus: %x\n", res);
       exit(1);
     }
-    auto mod = BN_new();
-    if (!BN_bin2bn(m, m_size, mod)) {
-      fprintf(stderr, "BN_bin2bn failed\n");
+    stpm::BIGNUMWrap mod;
+    if (!BN_bin2bn(m, m_size, mod.get())) {
+      std::cerr << "BN_bin2bn failed\n";
       exit(1);
     }
-    std::clog << "Outputting modulus…\n";
-    printf("%s\n", BN_bn2dec(mod));
-    if (is_vuln(mod)) {
+    std::clog << "Modulus:\n";
+    std::cout << BN_bn2dec(mod.get()) << std::endl;
+    if (is_vuln(mod.get())) {
       std::cerr << "--------------\nTHE KEY IS WEAK!\n";
     } else {
       std::cerr << "--------------\nThe key is fine.\n";
     }
   }
 }
+/* ---- Emacs Variables ----
+ * Local Variables:
+ * c-basic-offset: 2
+ * indent-tabs-mode: nil
+ * End:
+ */

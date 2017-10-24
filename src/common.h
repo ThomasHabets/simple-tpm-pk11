@@ -22,12 +22,58 @@
 #include<stdexcept>
 #include<string>
 
+#include<openssl/bn.h>
+#include<openssl/rsa.h>
+
 #include"tss/tspi.h"
 
 namespace stpm {
 #if 0
 }
 #endif
+
+template<typename T, T*(*New)(), void(*Free)(T*) noexcept>
+class AutoFree {
+ public:
+  AutoFree(): resource_(New()) {}
+  AutoFree(T* r): resource_(r) {}
+  AutoFree(const AutoFree&) = delete;
+  AutoFree(const AutoFree&&) = delete;
+  AutoFree& operator=(const AutoFree&) = delete;
+  AutoFree& operator=(const AutoFree&&) = delete;
+  ~AutoFree()
+  {
+    if (!resource_) {
+      return;
+    }
+    Free(resource_);
+    resource_ = nullptr;
+  }
+  T* get() const
+  {
+    return resource_;
+  }
+  T** getp()
+  {
+    return &resource_;
+  }
+  T* operator->() const
+  {
+    return resource_;
+  }
+  T* release()
+  {
+    T* ret = resource_;
+    resource_ = nullptr;
+    return ret;
+  }
+ private:
+  T* resource_;
+};
+
+typedef AutoFree<RSA, RSA_new, RSA_free> RSAWrap;
+typedef AutoFree<BIGNUM, BN_new, BN_free> BIGNUMWrap;
+typedef AutoFree<BN_CTX, BN_CTX_new, BN_CTX_free> BNCTXWrap;
 
 // Exception type for TPM errors, adding helpful troubleshooting information
 // in extra().

@@ -114,46 +114,6 @@ const int num_random_bytes = 10240; // 10*8192 bits.
 const char* env_log_stderr = "SIMPLE_TPM_PK11_LOG_STDERR";
 const TSS_UUID srk_uuid = TSS_UUID_SRK;
 
-BEGIN_NAMESPACE();
-template<typename T, T*(*New)(), void(*Free)(T*) noexcept>
-class AutoFree {
- public:
-  AutoFree(): resource_(New()) {}
-  AutoFree(T* r): resource_(r) {}
-  AutoFree(const AutoFree&) = delete;
-  AutoFree(const AutoFree&&) = delete;
-  AutoFree& operator=(const AutoFree&) = delete;
-  AutoFree& operator=(const AutoFree&&) = delete;
-  ~AutoFree()
-  {
-    if (!resource_) {
-      return;
-    }
-    Free(resource_);
-    resource_ = nullptr;
-  }
-  T* get() const
-  {
-    return resource_;
-  }
-  T* operator->() const
-  {
-    return resource_;
-  }
-  T* release()
-  {
-    T* ret = resource_;
-    resource_ = nullptr;
-    return ret;
-  }
- private:
-  T* resource_;
-};
-
-typedef AutoFree<RSA, RSA_new, RSA_free> RSAWrap;
-typedef AutoFree<BIGNUM, BN_new, BN_free> BIGNUMWrap;
-END_NAMESPACE();
-
 std::string
 xgetpass(const std::string& prompt)
 {
