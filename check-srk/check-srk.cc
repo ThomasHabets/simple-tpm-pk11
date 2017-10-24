@@ -110,9 +110,17 @@ main()
   }
 
   auto mod = BN_new();
+  const auto offset = srk_pub_len - size/8;
+  printf("Offset: %d - %d = %d\n", srk_pub_len, size, offset);
+  if (!BN_bin2bn(&srk_pub[offset], srk_pub_len-offset, mod)) {
+    fprintf(stderr, "BN_bin2bn failed\n");
+    exit(1);
+  }
+  printf("Tail mod: %s\n", BN_bn2dec(mod));
+
   if (!BN_bin2bn(srk_pub, srk_pub_len, mod)) {
     fprintf(stderr, "BN_bin2bn failed\n");
     exit(1);
   }
-  printf("Mod: %s\n", BN_bn2dec(mod));
+  printf("Full mod: %s\n", BN_bn2dec(mod));
 }
