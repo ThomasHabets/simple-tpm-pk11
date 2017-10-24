@@ -26,9 +26,11 @@
 #include<iostream>
 #include<unistd.h>
 
+#pragma pack(push, 1)
 #include<openssl/bn.h>
 #include<tss/tspi.h>
 #include<trousers/trousers.h>
+#pragma pack(pop)
 
 // NULL for WKS.
 const char* srk_pin = NULL;
@@ -92,6 +94,7 @@ main(int argc, char** argv)
     exit(1);
   }
 
+  // Set up SRK PIN.
   if (!srk_pin){
     BYTE wks[] = TSS_WELL_KNOWN_SECRET;
     int wks_size = sizeof(wks);
@@ -115,40 +118,52 @@ main(int argc, char** argv)
     exit(1);
   }
 
-  UINT32 size;
-  res = Tspi_GetAttribUint32(
-      key,
-      TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_KEYSIZE,
-      &size);
-  if (TSS_SUCCESS != res) {
-    fprintf(stderr, "Failed to get length of SRK: %d %x\n", res, res);
-    exit(1);
-  }
-  std::clog << "Size: " << size << std::endl;
-
-  BYTE *srk_pub;
-  UINT32 srk_pub_len;
-  res = Tspi_Key_GetPubKey(key, &srk_pub_len, &srk_pub);
-  if (TSS_SUCCESS != res) {
-    fprintf(stderr,
-            "Failed to SRK pubkey: %x\n"
-            "Maybe you have an SRK PIN you need to supply with -s?\n", res);
-    exit(1);
+  // Get size.
+  {
+    UINT32 size;
+    res = Tspi_GetAttribUint32(
+        key,
+        TSS_TSPATTRIB_RSAKEY_INFO, TSS_TSPATTRIB_KEYINFO_RSA_KEYSIZE,
+        &size);
+    if (TSS_SUCCESS != res) {
+      fprintf(stderr, "Failed to get length of SRK: %d %x\n", res, res);
+      exit(1);
+    }
+    std::clog << "Size: " << size << std::endl;
   }
 
-  auto mod = BN_new();
-  const auto offset = srk_pub_len - size/8;
-  // printf("Offset: %d - %d = %d\n", srk_pub_len, size, offset);
-  if (!BN_bin2bn(&srk_pub[offset], srk_pub_len-offset, mod)) {
-    fprintf(stderr, "BN_bin2bn failed\n");
-    exit(1);
+  if (true) {
+    // TODO: I don't know why I have to GetPubKey before GetAttribData,
+    // but apparently I do.
+    BYTE *srk_pub;
+    UINT32 srk_pub_len = 0;
+    res = Tspi_Key_GetPubKey(key, &srk_pub_len, &srk_pub);
+    if (TSS_SUCCESS != res) {
+      fprintf(stderr,
+              "Failed to SRK pubkey: %x\n"
+              "Maybe you have an SRK PIN you need to supply with -s?\n", res);
+      exit(1);
+    }
   }
-  printf("Tail modulus. Check this:\n%s\n", BN_bn2dec(mod));
-  if (false) {
-    if (!BN_bin2bn(srk_pub, srk_pub_len, mod)) {
+
+  // Get modulus.
+  {
+    BYTE* m;
+    UINT32 m_size = 0;
+    res = Tspi_GetAttribData(
+        key, TSS_TSPATTRIB_RSAKEY_INFO,
+        TSS_TSPATTRIB_KEYINFO_RSA_MODULUS,
+        &m_size, &m);
+    if (TPM_ERROR(res)) {
+      fprintf(stderr, "Failed to get SRK modulus: %x\n", res);
+      exit(1);
+    }
+    auto mod = BN_new();
+    if (!BN_bin2bn(m, m_size, mod)) {
       fprintf(stderr, "BN_bin2bn failed\n");
       exit(1);
     }
-    printf("Full modulus. Check this as well:\n%s\n", BN_bn2dec(mod));
+    std::clog << "Outputting modulus…\n";
+    printf("%s\n", BN_bn2dec(mod));
   }
 }
