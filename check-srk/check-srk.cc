@@ -26,11 +26,9 @@
 #include<iostream>
 #include<unistd.h>
 
-#pragma pack(push, 1)
 #include<openssl/bn.h>
 #include<tss/tspi.h>
 #include<trousers/trousers.h>
-#pragma pack(pop)
 
 // NULL for WKS.
 const char* srk_pin = NULL;
