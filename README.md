@@ -166,7 +166,6 @@ Could not add card "/…/libsimple-tpm-pk11.so": agent refused operation
 * http://www.trustedcomputinggroup.org/resources/tcg_software_stack_tss_specification
 * http://www.infineon.com/dgdl/TPM+Key+Backup+and+Recovery.pdf
 * http://www.engadget.com/2010/02/12/christopher-tarnovsky-hacks-infineons-unhackable-chip-we-pre/
-* http://trousers.sourceforge.net/dev_faq.html
 * http://resources.infosecinstitute.com/linux-tpm-encryption-initializing-and-using-the-tpm/
 * http://p11-glue.freedesktop.org/p11-kit.html
 * http://trousers.sourceforge.net/dev_faq.html
