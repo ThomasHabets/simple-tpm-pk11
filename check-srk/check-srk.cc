@@ -15,24 +15,39 @@
  */
 /*
  * Ugly hack to extract the SRK modulus to then check for Infineon disaster vuln.
+ *
  * Compile with: g++ -o check-srk -std=gnu++11 check-srk.cc -ltspi -lssl -lcrypto
+ *
  * Take output modulus and shove it into https://gist.github.com/marcan/fc87aa78085c2b6f979aefc73fdc381f
  */
 #include<cstdio>
 #include<cstdlib>
 #include<cstring>
 #include<iostream>
+#include<unistd.h>
 
 #include<openssl/bn.h>
 #include<tss/tspi.h>
 #include<trousers/trousers.h>
 
 // NULL for WKS.
-const char* srk_pin = "";
+const char* srk_pin = NULL;
 
 int
-main()
+main(int argc, char** argv)
 {
+  int opt;
+  while ((opt = getopt(argc, argv, "s:")) != -1) {
+    switch (opt) {
+    case 's':
+      srk_pin = optarg;
+      break;
+    default:
+      fprintf(stderr, "Usage: %s [-s <SRK pin>]\n", argv[0]);
+      exit(EXIT_FAILURE);
+    }
+  }
+
   TSS_HCONTEXT ctx;
   if (TSS_SUCCESS != Tspi_Context_Create(&ctx)) {
     fprintf(stderr, "Failed to create context\n");
@@ -61,8 +76,7 @@ main()
 
   res = Tspi_Context_LoadKeyByUUID(
       ctx,
-      //TSS_PS_TYPE_SYSTEM,
-      2,
+      TSS_PS_TYPE_SYSTEM,
       TSS_UUID_SRK,
       &key);
   if (TSS_SUCCESS != res) {
@@ -116,22 +130,25 @@ main()
   UINT32 srk_pub_len;
   res = Tspi_Key_GetPubKey(key, &srk_pub_len, &srk_pub);
   if (TSS_SUCCESS != res) {
-    fprintf(stderr, "Failed to SRK pubkey: %x\n", res);
+    fprintf(stderr,
+            "Failed to SRK pubkey: %x\n"
+            "Maybe you have an SRK PIN you need to supply with -s?\n", res);
     exit(1);
   }
 
   auto mod = BN_new();
   const auto offset = srk_pub_len - size/8;
-  printf("Offset: %d - %d = %d\n", srk_pub_len, size, offset);
+  // printf("Offset: %d - %d = %d\n", srk_pub_len, size, offset);
   if (!BN_bin2bn(&srk_pub[offset], srk_pub_len-offset, mod)) {
     fprintf(stderr, "BN_bin2bn failed\n");
     exit(1);
   }
-  printf("Tail mod: %s\n", BN_bn2dec(mod));
-
-  if (!BN_bin2bn(srk_pub, srk_pub_len, mod)) {
-    fprintf(stderr, "BN_bin2bn failed\n");
-    exit(1);
+  printf("Tail modulus. Check this:\n%s\n", BN_bn2dec(mod));
+  if (false) {
+    if (!BN_bin2bn(srk_pub, srk_pub_len, mod)) {
+      fprintf(stderr, "BN_bin2bn failed\n");
+      exit(1);
+    }
+    printf("Full modulus. Check this as well:\n%s\n", BN_bn2dec(mod));
   }
-  printf("Full mod: %s\n", BN_bn2dec(mod));
 }
