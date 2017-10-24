@@ -20,12 +20,15 @@
  */
 #include<cstdio>
 #include<cstdlib>
+#include<cstring>
 #include<iostream>
 
 #include<openssl/bn.h>
 #include<tss/tspi.h>
 #include<trousers/trousers.h>
 
+// NULL for WKS.
+const char* srk_pin = "";
 
 int
 main()
@@ -75,13 +78,21 @@ main()
     exit(1);
   }
 
-  BYTE wks[] = TSS_WELL_KNOWN_SECRET;
-  int wks_size = sizeof(wks);
-  res = Tspi_Policy_SetSecret(policy,
-         TSS_SECRET_MODE_SHA1, wks_size, wks);
-  if (TSS_SUCCESS != res) {
-    fprintf(stderr, "Failed to set WKS: %d %x\n", res, res);
-    exit(1);
+  if (!srk_pin){
+    BYTE wks[] = TSS_WELL_KNOWN_SECRET;
+    int wks_size = sizeof(wks);
+    res = Tspi_Policy_SetSecret(policy,
+                                TSS_SECRET_MODE_SHA1, wks_size, wks);
+    if (TSS_SUCCESS != res) {
+      fprintf(stderr, "Failed to set WKS: %d %x\n", res, res);
+      exit(1);
+    }
+  } else {
+    res = Tspi_Policy_SetSecret(policy, TSS_SECRET_MODE_PLAIN, strlen(srk_pin),(BYTE*)srk_pin);
+    if (TSS_SUCCESS != res) {
+      fprintf(stderr, "Failed to set WKS: %d %x\n", res, res);
+      exit(1);
+    }
   }
 
   res = Tspi_Policy_AssignToObject(policy, key);
