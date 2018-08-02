@@ -57,7 +57,7 @@ RSA_set0_key(RSA *rsa, BIGNUM *n, BIGNUM *e, BIGNUM *d)
   rsa->n = n;
   rsa->e = e;
   rsa->d = d;
-  return 0;
+  return 1;
 }
 #endif
 #ifndef HAVE_RSA_GET0_KEY
@@ -758,8 +758,8 @@ public_decrypt(const Key& key, const std::string& sig)
 {
   // Load key.
   RSAWrap rsa;
-  if (RSA_set0_key(rsa.get(), string2bn(key.modulus), string2bn(key.exponent),
-                   NULL)) {
+  if (!RSA_set0_key(rsa.get(), string2bn(key.modulus), string2bn(key.exponent),
+                    NULL)) {
     throw std::runtime_error("RSA_set0_key failed");
   }
 
