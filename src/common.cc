@@ -283,7 +283,7 @@ xsprintf(const char* fmt, ...) {
   vsnprintf(&buf[0], s, fmt, va2);
   va_end(va2);
 
-  return std::string(buf.begin(), buf.end());
+  return std::string(buf.begin(), buf.end()-1);
 }
 
 bool

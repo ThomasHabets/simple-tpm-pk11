@@ -160,7 +160,7 @@ Config::debug_log(const char* fmt, ...) {
   va_end(va2);
 
   if (debug_) {
-    stpm::do_log(logfile_.get(), stpm::xctime() + " DEBUG " + std::string(buf.begin(), buf.end()));
+    stpm::do_log(logfile_.get(), stpm::xctime() + " DEBUG " + std::string(buf.begin(), buf.end()-1));
   }
 }
 
