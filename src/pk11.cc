@@ -29,9 +29,13 @@
 #include<fstream>
 #include<functional>
 #include<iostream>
+#include<pwd.h>
 #include<sstream>
 #include<string>
 #include<syslog.h>
+#include<system_error>
+#include<sys/types.h>
+#include<unistd.h>
 #include<vector>
 
 #include"tss/tspi.h"
@@ -95,8 +99,16 @@ get_config()
 {
   const char* home{getenv("HOME")};
   if (home == nullptr) {
+    struct passwd *pwd = getpwuid(getuid());
+    if (pwd == NULL) {
+      throw std::system_error(std::error_code(errno, std::system_category()),
+                              std::string(__func__) + "(): getpwuid.");
+    }
+    home = pwd->pw_dir;
+  }
+  if (home == nullptr) {
     throw std::runtime_error(std::string(__func__) + "(): "
-                             + "getenv(HOME) failed.");
+                             + "could not get HOME of user by ENV or via passwd.");
   }
 
   std::string config_path{std::string{home} + "/" + config_dir + "/config"};
