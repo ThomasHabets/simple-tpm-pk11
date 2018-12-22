@@ -152,7 +152,7 @@ C_GetSlotList(CK_BBOOL tokenPresent, CK_SLOT_ID_PTR pSlotList,
               CK_ULONG_PTR pusCount)
 {
   return wrap_exceptions(__func__, [&]{
-      if (*pusCount) {
+      if (pSlotList && *pusCount) {
         *pSlotList = tpm_slot_id;
       }
       *pusCount = 1;
