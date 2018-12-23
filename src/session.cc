@@ -203,6 +203,12 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
       *(CK_OBJECT_CLASS *)(pTemplate[i].pValue) = objectClass(hObject);
       break;
 
+    case CKA_KEY_TYPE:
+      config_.debug_log("   Attribute %d: Key type", i);
+      pTemplate[i].ulValueLen = sizeof(CK_KEY_TYPE);
+      *(CK_KEY_TYPE *)(pTemplate[i].pValue) = CKK_RSA;
+      break;
+
     case CKA_ID:
       config_.debug_log("   Attribute %d: ID", i);
       // TODO: populate properly.
