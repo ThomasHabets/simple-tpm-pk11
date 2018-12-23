@@ -111,6 +111,13 @@ Config::read_file(std::ifstream& f)
   }
 }
 
+static
+CK_OBJECT_CLASS
+objectClass(CK_OBJECT_HANDLE hObject)
+{
+  return (hObject == 1) ? CKO_PUBLIC_KEY : CKO_PRIVATE_KEY;
+}
+
 Session::Session(const Config& config)
     :config_(config),
      findpos_(0)
@@ -127,21 +134,32 @@ Session::Login(CK_USER_TYPE type, const std::string& pin)
 void
 Session::FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters)
 {
-  findpos_ = 0;
+  findpos_ = 1; // Handles can't be 0, or cryptoki will interpret it as an error
+  filters_ = filters;
+  nfilters_ = nfilters;
 }
 
 int
 Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
 {
-  if (findpos_ == 1) {
-    return 0;
+  int numFound = 0;
+  for(; numFound < maxobj && findpos_ <= 2; findpos_++) {
+    bool filterRejected = false;
+    for(int i = 0; i < nfilters_; i++) {
+      if(filters_[i].type == CKA_CLASS) {
+        if(*(CK_OBJECT_CLASS *)filters_[i].pValue != objectClass(findpos_)) {
+          filterRejected = true;
+          break;
+        }
+      } else {
+        // Ignore all other filters
+      }
+    }
+    if(!filterRejected) {
+      obj[numFound++] = findpos_;
+    }
   }
-  if (maxobj == 0) {
-    return 0;
-  }
-  *obj = 0;
-  findpos_++;
-  return 1;
+  return numFound;
 }
 
 void

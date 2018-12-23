@@ -74,6 +74,8 @@ private:
   Config config_;
   std::string pin_;
   int findpos_;
+  CK_ATTRIBUTE_PTR filters_;
+  int nfilters_;
 };
 #endif
 /* ---- Emacs Variables ----
