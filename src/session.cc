@@ -197,6 +197,12 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
 
   for (unsigned i = 0; i < usCount; i++) {
     switch (pTemplate[i].type) {
+    case CKA_CLASS:
+      config_.debug_log("   Attribute %d: Class", i);
+      pTemplate[i].ulValueLen = sizeof(CK_OBJECT_CLASS);
+      *(CK_OBJECT_CLASS *)(pTemplate[i].pValue) = objectClass(hObject);
+      break;
+
     case CKA_ID:
       config_.debug_log("   Attribute %d: ID", i);
       // TODO: populate properly.
