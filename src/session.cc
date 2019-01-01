@@ -113,14 +113,13 @@ Config::read_file(std::ifstream& f)
 
 static
 CK_OBJECT_CLASS
-objectClass(CK_OBJECT_HANDLE hObject)
+object_class(CK_OBJECT_HANDLE hObject)
 {
   return (hObject == 1) ? CKO_PUBLIC_KEY : CKO_PRIVATE_KEY;
 }
 
 Session::Session(const Config& config)
-    :config_(config),
-     findpos_(0)
+    :config_(config)
 {
 }
 
@@ -135,19 +134,19 @@ void
 Session::FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters)
 {
   findpos_ = 1; // Handles can't be 0, or cryptoki will interpret it as an error
-  filters_ = filters;
-  nfilters_ = nfilters;
+  find_filters_ = filters;
+  find_nfilters_ = nfilters;
 }
 
 int
 Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
 {
   int numFound = 0;
-  for(; numFound < maxobj && findpos_ <= 2; findpos_++) {
+  for (; numFound < maxobj && findpos_ <= 2; findpos_++) {
     bool filterRejected = false;
-    for(int i = 0; i < nfilters_; i++) {
-      if(filters_[i].type == CKA_CLASS) {
-        if(*(CK_OBJECT_CLASS *)filters_[i].pValue != objectClass(findpos_)) {
+    for (int i = 0; i < find_nfilters_; i++) {
+      if (find_filters_[i].type == CKA_CLASS) {
+        if (*static_cast<CK_OBJECT_CLASS*>(find_filters_[i].pValue) != object_class(findpos_)) {
           filterRejected = true;
           break;
         }
@@ -155,7 +154,7 @@ Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
         // Ignore all other filters
       }
     }
-    if(!filterRejected) {
+    if (!filterRejected) {
       obj[numFound++] = findpos_;
     }
   }
@@ -200,7 +199,7 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
     case CKA_CLASS:
       config_.debug_log("   Attribute %d: Class", i);
       pTemplate[i].ulValueLen = sizeof(CK_OBJECT_CLASS);
-      *(CK_OBJECT_CLASS *)(pTemplate[i].pValue) = objectClass(hObject);
+      *(CK_OBJECT_CLASS *)(pTemplate[i].pValue) = object_class(hObject);
       break;
 
     case CKA_KEY_TYPE:

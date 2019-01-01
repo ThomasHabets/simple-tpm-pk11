@@ -73,9 +73,12 @@ public:
 private:
   Config config_;
   std::string pin_;
-  int findpos_;
-  CK_ATTRIBUTE_PTR filters_;
-  int nfilters_;
+
+  // Set up by FindObjectsInit() used as state between FindObjects()
+  // calls.
+  int              findpos_ = 0;
+  CK_ATTRIBUTE_PTR find_filters_ = 0;
+  int              find_nfilters_ = 0;
 };
 #endif
 /* ---- Emacs Variables ----
