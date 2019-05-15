@@ -242,6 +242,19 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
       pTemplate[i].ulValueLen = 0;
       break;
 
+    case CKA_LABEL:
+      config_.debug_log("   Attribute %d: Label (unsupported)", i);
+      if (pTemplate[i].pValue) {
+        *static_cast<char*>(pTemplate[i].pValue) = 'x';
+      }
+      pTemplate[i].ulValueLen = 1;
+      break;
+
+    case 0x202: // CKA_ALWAYS_AUTHENTICATE:
+      config_.debug_log("   Attribute %d: Always authenticate (unsupported)", i);
+      pTemplate[i].ulValueLen = 0;
+      break;
+
     default:
       config_.debug_log("   Attribute %d: Unknown (%d)", i, pTemplate[i].type);
       pTemplate[i].ulValueLen = 0;
