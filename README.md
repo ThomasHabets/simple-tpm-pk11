@@ -7,7 +7,7 @@ Apache 2.0 license.
 
 This is NOT a Google product.
 
-Contact: thomas@habets.se / habets@google.com  
+Contact: thomas@habets.se / habets@google.com
 https://github.com/ThomasHabets/
 
 
@@ -49,7 +49,7 @@ Confirm password: [enter something secret here]
    specify a password but it's easier it you don't. The SRK password is only
    used to allow crypto operations. You still need blobs and key passwords to
    use other peoples keys.
-   
+
    The "SRK password" is needed to be able to do operations with the "SRK",
    which is the actual cryptographic key. The user has no access to the SRK
    directly. The same goes for other keys protected by the TPM chip.
@@ -82,8 +82,12 @@ stpm-verify -f to-sign -k ~/.simple-tpm-pk11/my.key -s to-sign.sig
 echo "key my.key" > ~/.simple-tpm-pk11/config
 ```
 
-Optionally add "log foo.log" in there too.
+#### Optional config options
 
+##### `log foo.log`
+##### `key_pin my-pin-here`
+##### `srk_pin my-pin-here`
+##### `debug`
 
 ### 3. Extract the public key in SSH format
 ```
@@ -117,7 +121,7 @@ without PKCS#11 support) is that you see this error message when you try:
 
 ```
 $ ssh-add -s /…/libsimple-tpm-pk11.so
-Enter passphrase for PKCS#11: 
+Enter passphrase for PKCS#11:
 Could not add card "/…/libsimple-tpm-pk11.so": agent refused operation
 ```
 
@@ -131,7 +135,7 @@ Could not add card "/…/libsimple-tpm-pk11.so": agent refused operation
 * Lenovo T500 / INTC STM 1.2.4.1
 * Lenono X200s / INTC TPM 1.2.4.1
 * Lenovo X240 / STM TPM 1.2.13.12
-* Lenovo T460s /IFX TPM 1.2.6.40  
+* Lenovo T460s /IFX TPM 1.2.6.40
 
 ### Software
 * OpenSSH 5.9
