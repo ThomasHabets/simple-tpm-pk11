@@ -15,7 +15,7 @@ https://github.com/ThomasHabets/
 
 ### Debian
 ```shell
-apt-get install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
+apt install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev autoconf libtool
 ```
 
 ### Fedora
@@ -33,7 +33,7 @@ pkg install tpm-tools trousers-tddl opencryptoki openssl
 
 ## Build simple-tpm-pk11
 ```shell
-./configure && make && sudo make install
+./bootstrap && ./configure && make && sudo make install
 ```
 
 
