@@ -15,7 +15,7 @@ https://github.com/ThomasHabets/
 
 ### Debian
 ```shell
-apt-get install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
+apt install tpm-tools libtspi-dev libopencryptoki-dev libssl-dev
 ```
 
 ### Fedora
