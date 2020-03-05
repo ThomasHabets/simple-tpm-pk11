@@ -32,6 +32,17 @@ pkg install tpm-tools trousers-tddl opencryptoki openssl
 ```
 
 ## Build simple-tpm-pk11
+
+If there is no `configure` script (e.g. because the release comes directly
+from the git repo where generated files are not committed), then run:
+
+```shell
+apt install autotools libtool   # Or equivalent for your OS.
+./bootstrap.sh
+```
+
+When `configure` does exist, configure and build:
+
 ```shell
 ./configure && make && sudo make install
 ```
