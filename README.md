@@ -145,6 +145,7 @@ Could not add card "/…/libsimple-tpm-pk11.so": agent refused operation
 * Lenovo T440s / STM TPM 1.2.13.12
 * Lenovo T500 / INTC STM 1.2.4.1
 * Lenono X200s / INTC TPM 1.2.4.1
+* Lenovo X230 / STM TPM 1.2.13.8
 * Lenovo X240 / STM TPM 1.2.13.12
 * Lenovo T460s /IFX TPM 1.2.6.40
 
@@ -156,6 +157,7 @@ Could not add card "/…/libsimple-tpm-pk11.so": agent refused operation
 * OpenSSH 6.8p1 on Arch Linux
 * OpenSSH 7.1p2 on Debian
 * OpenSSH 7.2p2 Ubuntu 16.04.2 LTS (Xenial Xerus)
+* OpenSSH 7.9p1 on Debian 10.3
 
 ## TODO
 * Clean up code.
