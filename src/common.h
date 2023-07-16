@@ -32,7 +32,7 @@ namespace stpm {
 }
 #endif
 
-template<typename T, T*(*New)(), void(*Free)(T*) noexcept>
+template<typename T, T*(*New)(), void(*Free)(T*)>
 class AutoFree {
  public:
   AutoFree(): resource_(New()) {}
