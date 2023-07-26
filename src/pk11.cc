@@ -90,6 +90,14 @@ log_debug(const std::string& msg)
   }
 }
 
+// string must be padded with space (0x20) and must not be null terminated
+static void
+write_pk11_str(void* dest, char* src, size_t src_size, size_t max_size)
+{
+  memset((char*)dest, 0x20, max_size);
+  memcpy((char*)dest, src, src_size > max_size ? max_size : src_size);
+}
+
 Config
 get_config()
 {
@@ -225,10 +233,14 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 {
   return wrap_exceptions(__func__, [&]{
       // TODO: fill these out from token.
-      strcpy((char*)pInfo->label, "Simple-TPM-PK11 token");
-      strcpy((char*)pInfo->manufacturerID, "manuf id");
-      strcpy((char*)pInfo->model, "model");
-      strcpy((char*)pInfo->serialNumber, "serial");
+      char label[] = "Simple-TPM-PK11 token";
+      char manuf_id[] = "manuf id";
+      char model[] = "model";
+      char serial[] = "serial";
+      write_pk11_str(pInfo->label, label, strlen(label), 32);
+      write_pk11_str(pInfo->manufacturerID, manuf_id, strlen(manuf_id), 32);
+      write_pk11_str(pInfo->model, model, strlen(model), 16);
+      write_pk11_str(pInfo->serialNumber, serial, strlen(serial), 16);
 
       // TODO: Add CKF_RNG.
       pInfo->flags = CKF_TOKEN_INITIALIZED;
