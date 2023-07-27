@@ -19,6 +19,7 @@
 #include<sstream>
 #include<stdexcept>
 #include<string>
+#include<vector>
 
 #include<opencryptoki/pkcs11.h>
 
@@ -54,6 +55,23 @@ public:
   void read_file(std::ifstream&);
 };
 
+/*
+typedef struct CK_ATTRIBUTE {
+  CK_ATTRIBUTE_TYPE type;
+  CK_VOID_PTR pValue;
+  CK_ULONG ulValueLen;
+} CK_ATTRIBUTE;
+*/
+
+// deep copy of CK_ATTRIBUTE
+// data_ is raw data (need to be reinterpret_cast to whatever makes sense)
+class CK_ATTRIBUTE_FULL {
+public:
+  CK_ATTRIBUTE_FULL(CK_ATTRIBUTE); // construct from CK_ATTRIBUTE
+  CK_ATTRIBUTE_TYPE type_;
+  std::vector<char> data_;
+};
+
 class Session {
 public:
   Session(const Config&);
@@ -77,8 +95,7 @@ private:
   // Set up by FindObjectsInit() used as state between FindObjects()
   // calls.
   int              findpos_ = 0;
-  CK_ATTRIBUTE_PTR find_filters_ = 0;
-  int              find_nfilters_ = 0;
+  std::vector<CK_ATTRIBUTE_FULL> find_filters_;
 };
 #endif
 /* ---- Emacs Variables ----

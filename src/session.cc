@@ -118,6 +118,13 @@ object_class(CK_OBJECT_HANDLE hObject)
   return (hObject == 1) ? CKO_PUBLIC_KEY : CKO_PRIVATE_KEY;
 }
 
+CK_ATTRIBUTE_FULL::CK_ATTRIBUTE_FULL(CK_ATTRIBUTE attr)
+{
+  type_ = attr.type;
+  // create deep copy
+  data_ = std::vector<char>(static_cast<char*>(attr.pValue), static_cast<char*>(attr.pValue) + attr.ulValueLen);
+}
+
 Session::Session(const Config& config)
     :config_(config)
 {
@@ -134,8 +141,10 @@ void
 Session::FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters)
 {
   findpos_ = 1; // Handles can't be 0, or cryptoki will interpret it as an error
-  find_filters_ = filters;
-  find_nfilters_ = nfilters;
+  // create deep copy of attribute filter array
+  // it's possible that the memory of attribute filter array be reclaimed by the caller
+  // between the call of FindObjectsInit and FindObjects
+  find_filters_ = std::vector<CK_ATTRIBUTE_FULL>(filters, filters + nfilters);
 }
 
 int
@@ -144,14 +153,17 @@ Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
   int numFound = 0;
   for (; numFound < maxobj && findpos_ <= 2; findpos_++) {
     bool filterRejected = false;
-    for (int i = 0; i < find_nfilters_; i++) {
-      if (find_filters_[i].type == CKA_CLASS) {
-        if (*static_cast<CK_OBJECT_CLASS*>(find_filters_[i].pValue) != object_class(findpos_)) {
+    for (CK_ATTRIBUTE_FULL x : find_filters_) {
+      if (x.type_ == CKA_CLASS) {
+        // match object class
+        // only CKO_PUBLIC_KEY and CKO_PRIVATE_KEY is allowed
+        if (*reinterpret_cast<CK_OBJECT_CLASS*>(x.data_.data()) != object_class(findpos_)) {
           filterRejected = true;
           break;
         }
       } else {
         // Ignore all other filters
+        // TODO: implement CKA_ID and CKA_LABEL match
       }
     }
     if (!filterRejected) {
@@ -182,6 +194,150 @@ Config::debug_log(const char* fmt, ...) const
   }
 }
 
+bool
+getPublicKeyAttribute(Config& config_, CK_ATTRIBUTE_PTR pAttribute)
+{
+  switch (pAttribute->type) {
+  case CKA_ENCRYPT:
+    config_.debug_log("   Attribute: Encrypt");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  case CKA_VERIFY:
+    config_.debug_log("   Attribute: Verify");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = true;
+    }
+    return true;
+    break;
+
+  case CKA_VERIFY_RECOVER:
+    config_.debug_log("   Attribute: Verify Recover");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  case CKA_WRAP:
+    config_.debug_log("   Attribute: Wrap");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  case CKA_TRUSTED:
+    config_.debug_log("   Attribute: Trusted");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = true;
+    }
+    return true;
+    break;
+
+  default:
+    return false;
+  }
+}
+
+bool
+getPrivateKeyAttribute(Config& config_, CK_ATTRIBUTE_PTR pAttribute)
+{
+  switch (pAttribute->type) {
+  case CKA_SENSITIVE:
+    config_.debug_log("   Attribute: Sensitive");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = true;
+    }
+    return true;
+    break;
+
+  case CKA_DECRYPT:
+    config_.debug_log("   Attribute: Decrypt");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  case CKA_SIGN:
+    config_.debug_log("   Attribute: Sign");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = true;
+    }
+    return true;
+    break;
+
+  case CKA_SIGN_RECOVER:
+    config_.debug_log("   Attribute: Sign Recover");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  case CKA_UNWRAP:
+    config_.debug_log("   Attribute: Unwrap");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  case CKA_EXTRACTABLE:
+    config_.debug_log("   Attribute: Extractable");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  case CKA_ALWAYS_SENSITIVE:
+    config_.debug_log("   Attribute: Always Sensitive");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = true;
+    }
+    return true;
+    break;
+
+  case CKA_NEVER_EXTRACTABLE:
+    config_.debug_log("   Attribute: Never Extractable");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = true;
+    }
+    return true;
+    break;
+
+  case CKA_WRAP_WITH_TRUSTED:
+    config_.debug_log("   Attribute: Wrap with Trusted");
+    pAttribute->ulValueLen = sizeof(CK_BBOOL);
+    if (pAttribute->pValue != nullptr) {
+      *(CK_BBOOL *)(pAttribute->pValue) = false;
+    }
+    return true;
+    break;
+
+  default:
+    return false;
+  }
+}
+
 void
 Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
                            CK_ATTRIBUTE_PTR pTemplate, CK_ULONG usCount)
@@ -195,24 +351,54 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
   }
   const stpm::Key key = stpm::parse_keyfile(kfs);
 
+  // TODO: maybe ID and label can be defined in config file
+  char object_id[] = "1111";
+  char public_key_label[] = "simple-tpm-public-key";
+  char private_key_label[] = "simple-tpm-private-key";
+  char unknown_key_label[] = "simple-tpm-unknown-key";
+
   for (unsigned i = 0; i < usCount; i++) {
+    // config_.debug_log("   Attribute ID (CKA_*) %d", pTemplate[i].type);
     switch (pTemplate[i].type) {
     case CKA_CLASS:
       config_.debug_log("   Attribute %d: Class", i);
       pTemplate[i].ulValueLen = sizeof(CK_OBJECT_CLASS);
-      *(CK_OBJECT_CLASS *)(pTemplate[i].pValue) = object_class(hObject);
+      if (pTemplate[i].pValue != nullptr) {
+        *(CK_OBJECT_CLASS *)(pTemplate[i].pValue) = object_class(hObject);
+      }
       break;
 
     case CKA_KEY_TYPE:
       config_.debug_log("   Attribute %d: Key type", i);
       pTemplate[i].ulValueLen = sizeof(CK_KEY_TYPE);
-      *(CK_KEY_TYPE *)(pTemplate[i].pValue) = CKK_RSA;
+      if (pTemplate[i].pValue != nullptr) {
+        *(CK_KEY_TYPE *)(pTemplate[i].pValue) = CKK_RSA;
+      }
+      break;
+
+    case CKA_DERIVE:
+      config_.debug_log("   Attribute %d: Derive", i);
+      pTemplate[i].ulValueLen = sizeof(CK_BBOOL);
+      if (pTemplate[i].pValue != nullptr) {
+        *(CK_BBOOL *)(pTemplate[i].pValue) = false;
+      }
+      break;
+
+    case CKA_LOCAL:
+      config_.debug_log("   Attribute %d: Local", i);
+      pTemplate[i].ulValueLen = sizeof(CK_BBOOL);
+      if (pTemplate[i].pValue != nullptr) {
+        *(CK_BBOOL *)(pTemplate[i].pValue) = true;
+      }
       break;
 
     case CKA_ID:
       config_.debug_log("   Attribute %d: ID", i);
-      // TODO: populate properly.
-      pTemplate[i].ulValueLen = 10; // ID
+      // public key and private key can have the same ID according to spec
+      pTemplate[i].ulValueLen = 4; // ID
+      if (pTemplate[i].pValue) {
+        memcpy(pTemplate[i].pValue, object_id, 4);
+      }
       break;
 
     case CKA_MODULUS:
@@ -221,6 +407,15 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
       pTemplate[i].ulValueLen = key.modulus.size();
       if (pTemplate[i].pValue) {
         memcpy(pTemplate[i].pValue, key.modulus.data(), key.modulus.size());
+      }
+      break;
+
+    case CKA_MODULUS_BITS:
+      config_.debug_log("   Attribute %d: Modulus bits (unsupported) %d",
+                        i, key.modulus.size());
+      pTemplate[i].ulValueLen = sizeof(CK_ULONG);
+      if (pTemplate[i].pValue) {
+        *(CK_ULONG *)(pTemplate[i].pValue) = 2048UL;
       }
       break;
 
@@ -245,10 +440,31 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
 
     case CKA_LABEL:
       config_.debug_log("   Attribute %d: Label (unsupported)", i);
-      if (pTemplate[i].pValue) {
-        *static_cast<char*>(pTemplate[i].pValue) = 'x';
+      if (hObject == 1) {
+        // public key
+        if (pTemplate[i].pValue) {
+          memcpy(pTemplate[i].pValue, public_key_label, strlen(public_key_label));
+        }
+        pTemplate[i].ulValueLen = strlen(public_key_label);
+      } else if (hObject == 2) {
+        // private key
+        if (pTemplate[i].pValue) {
+          memcpy(pTemplate[i].pValue, private_key_label, strlen(private_key_label));
+        }
+        pTemplate[i].ulValueLen = strlen(private_key_label);
+      } else {
+        // should not happen
+        if (pTemplate[i].pValue) {
+          memcpy(pTemplate[i].pValue, unknown_key_label, strlen(unknown_key_label));
+        }
+        pTemplate[i].ulValueLen = strlen(unknown_key_label);
       }
-      pTemplate[i].ulValueLen = 1;
+      break;
+
+    case CKA_START_DATE:
+    case CKA_END_DATE:
+      config_.debug_log("   Attribute %d: Start or End Date (unsupported)", i);
+      pTemplate[i].ulValueLen = 0;
       break;
 
     case 0x202: // CKA_ALWAYS_AUTHENTICATE:
@@ -257,6 +473,23 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
       break;
 
     default:
+      // if (hObject == 1) {
+      //   // public key
+      //   if (getPublicKeyAttribute(config_, &pTemplate[i])) {
+      //     continue;
+      //   }
+      // } else if (hObject == 2) {
+      //   // private key
+      //   if (getPrivateKeyAttribute(config_, &pTemplate[i])) {
+      //     continue;
+      //   }
+      // } else {}
+      // Some libraries would like to query public key attributes on private keys (or vice versa)
+      // This provide some sane defaults
+      if (getPublicKeyAttribute(config_, &pTemplate[i]) ||
+          getPrivateKeyAttribute(config_, &pTemplate[i])) {
+        continue;
+      }
       config_.debug_log("   Attribute %d: Unknown (%d)", i, pTemplate[i].type);
       pTemplate[i].ulValueLen = 0;
       std::stringstream ss;
