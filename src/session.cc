@@ -510,6 +510,12 @@ void
 Session::Sign(CK_BYTE_PTR pData, CK_ULONG usDataLen,
               CK_BYTE_PTR pSignature, CK_ULONG_PTR pusSignatureLen)
 {
+  if (pSignature == nullptr) {
+    // when pSignature is NULL, we should tell caller the size of the buffer needed
+    // according to the call convention mentioned in the spec
+    *pusSignatureLen = 256; // signature size is 256 bytes
+    return;
+  }
   std::string kfs;
   try {
     kfs = stpm::slurp_file(config_.keyfile_);
