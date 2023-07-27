@@ -48,7 +48,7 @@ public:
   std::string key_pin_;
   bool debug_;
 
-  void debug_log(const char*,...);
+  void debug_log(const char*,...) const;
 
  private:
   void read_file(std::ifstream&);

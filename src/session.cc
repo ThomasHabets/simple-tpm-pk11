@@ -162,7 +162,8 @@ Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
 }
 
 void
-Config::debug_log(const char* fmt, ...) {
+Config::debug_log(const char* fmt, ...) const
+{
   va_list args;
   va_start(args, fmt);
 
