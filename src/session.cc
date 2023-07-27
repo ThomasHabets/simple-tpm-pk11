@@ -118,11 +118,10 @@ object_class(CK_OBJECT_HANDLE hObject)
   return (hObject == 1) ? CKO_PUBLIC_KEY : CKO_PRIVATE_KEY;
 }
 
+// create deep copy
 CK_ATTRIBUTE_FULL::CK_ATTRIBUTE_FULL(CK_ATTRIBUTE attr)
+    :type_(attr.type), data_(static_cast<char*>(attr.pValue), static_cast<char*>(attr.pValue) + attr.ulValueLen)
 {
-  type_ = attr.type;
-  // create deep copy
-  data_ = std::vector<char>(static_cast<char*>(attr.pValue), static_cast<char*>(attr.pValue) + attr.ulValueLen);
 }
 
 Session::Session(const Config& config)
@@ -194,144 +193,130 @@ Config::debug_log(const char* fmt, ...) const
   }
 }
 
-bool
-getPublicKeyAttribute(Config& config_, CK_ATTRIBUTE_PTR pAttribute)
+static bool
+getPublicKeyAttribute(const Config& config, CK_ATTRIBUTE_PTR pAttribute)
 {
   switch (pAttribute->type) {
   case CKA_ENCRYPT:
-    config_.debug_log("   Attribute: Encrypt");
+    config.debug_log("   Attribute: Encrypt");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   case CKA_VERIFY:
-    config_.debug_log("   Attribute: Verify");
+    config.debug_log("   Attribute: Verify");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = true;
     }
     return true;
-    break;
 
   case CKA_VERIFY_RECOVER:
-    config_.debug_log("   Attribute: Verify Recover");
+    config.debug_log("   Attribute: Verify Recover");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   case CKA_WRAP:
-    config_.debug_log("   Attribute: Wrap");
+    config.debug_log("   Attribute: Wrap");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   case CKA_TRUSTED:
-    config_.debug_log("   Attribute: Trusted");
+    config.debug_log("   Attribute: Trusted");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = true;
     }
     return true;
-    break;
 
   default:
     return false;
   }
 }
 
-bool
-getPrivateKeyAttribute(Config& config_, CK_ATTRIBUTE_PTR pAttribute)
+static bool
+getPrivateKeyAttribute(const Config& config, CK_ATTRIBUTE_PTR pAttribute)
 {
   switch (pAttribute->type) {
   case CKA_SENSITIVE:
-    config_.debug_log("   Attribute: Sensitive");
+    config.debug_log("   Attribute: Sensitive");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = true;
     }
     return true;
-    break;
 
   case CKA_DECRYPT:
-    config_.debug_log("   Attribute: Decrypt");
+    config.debug_log("   Attribute: Decrypt");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   case CKA_SIGN:
-    config_.debug_log("   Attribute: Sign");
+    config.debug_log("   Attribute: Sign");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = true;
     }
     return true;
-    break;
 
   case CKA_SIGN_RECOVER:
-    config_.debug_log("   Attribute: Sign Recover");
+    config.debug_log("   Attribute: Sign Recover");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   case CKA_UNWRAP:
-    config_.debug_log("   Attribute: Unwrap");
+    config.debug_log("   Attribute: Unwrap");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   case CKA_EXTRACTABLE:
-    config_.debug_log("   Attribute: Extractable");
+    config.debug_log("   Attribute: Extractable");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   case CKA_ALWAYS_SENSITIVE:
-    config_.debug_log("   Attribute: Always Sensitive");
+    config.debug_log("   Attribute: Always Sensitive");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = true;
     }
     return true;
-    break;
 
   case CKA_NEVER_EXTRACTABLE:
-    config_.debug_log("   Attribute: Never Extractable");
+    config.debug_log("   Attribute: Never Extractable");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = true;
     }
     return true;
-    break;
 
   case CKA_WRAP_WITH_TRUSTED:
-    config_.debug_log("   Attribute: Wrap with Trusted");
+    config.debug_log("   Attribute: Wrap with Trusted");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
     if (pAttribute->pValue != nullptr) {
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-    break;
 
   default:
     return false;
@@ -358,7 +343,6 @@ Session::GetAttributeValue(CK_OBJECT_HANDLE hObject,
   char unknown_key_label[] = "simple-tpm-unknown-key";
 
   for (unsigned i = 0; i < usCount; i++) {
-    // config_.debug_log("   Attribute ID (CKA_*) %d", pTemplate[i].type);
     switch (pTemplate[i].type) {
     case CKA_CLASS:
       config_.debug_log("   Attribute %d: Class", i);
