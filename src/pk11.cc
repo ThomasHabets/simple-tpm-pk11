@@ -50,6 +50,12 @@ const std::string config_dir = ".simple-tpm-pk11";
 const char* env_debug = "SIMPLE_TPM_PK11_DEBUG";
 const char* env_config = "SIMPLE_TPM_PK11_CONFIG";
 const CK_SLOT_ID tpm_slot_id = 0x1234;
+const char library_description[] = "simple-tpm-pk11 library"; // 32
+const char manufacturer_id[] = "simple-tpm-pk11 manufacturer"; // 32
+const char slot_description[] = "Simple-TPM-PK11 slot"; // 64
+const char token_label[] = "Simple-TPM-PK11 token"; // 32
+const char token_model[] = "model"; // 16
+const char token_serial[] = "serial"; // 16
 
 // TODO: allocate and free sessions properly.
 std::vector<Session> sessions;
@@ -88,6 +94,14 @@ log_debug(const std::string& msg)
       std::cerr << xctime() << " DEBUG " << msg << std::endl;
     }
   }
+}
+
+// string must be padded with space (0x20) and must not be null terminated
+static void
+write_pk11_str(void* dest, const char* src, size_t src_size, size_t max_size)
+{
+  memset((char*)dest, 0x20, max_size);
+  memcpy((char*)dest, src, std::min(src_size, max_size));
 }
 
 Config
@@ -138,8 +152,8 @@ C_GetInfo(CK_INFO_PTR pInfo)
       pInfo->cryptokiVersion.major = 0;
       pInfo->cryptokiVersion.minor = 1;
       // TODO: flags
-      strcpy((char*)pInfo->manufacturerID, "simple-tpm-pk11 manufacturer");
-      strcpy((char*)pInfo->libraryDescription, "simple-tpm-pk11 library");
+      write_pk11_str(pInfo->libraryDescription, library_description, strlen(library_description), 32);
+      write_pk11_str(pInfo->manufacturerID, manufacturer_id, strlen(manufacturer_id), 32);
 
       // TODO: take these version numbers from somewhere canonical.
       pInfo->libraryVersion.major = 0;
@@ -210,8 +224,8 @@ C_GetSlotInfo(CK_SLOT_ID slotID, CK_SLOT_INFO_PTR pInfo)
 {
   return wrap_exceptions(__func__, [&]{
       // TODO: fill these out from slot.
-      strcpy((char*)pInfo->slotDescription, "Simple-TPM-PK11 slot");
-      strcpy((char*)pInfo->manufacturerID, "manuf id");
+      write_pk11_str(pInfo->slotDescription, slot_description, strlen(slot_description), 64);
+      write_pk11_str(pInfo->manufacturerID, manufacturer_id, strlen(manufacturer_id), 32);
 
       pInfo->flags = CKF_TOKEN_PRESENT;
       pInfo->hardwareVersion = { 0, 0 };
@@ -225,10 +239,10 @@ C_GetTokenInfo(CK_SLOT_ID slotID, CK_TOKEN_INFO_PTR pInfo)
 {
   return wrap_exceptions(__func__, [&]{
       // TODO: fill these out from token.
-      strcpy((char*)pInfo->label, "Simple-TPM-PK11 token");
-      strcpy((char*)pInfo->manufacturerID, "manuf id");
-      strcpy((char*)pInfo->model, "model");
-      strcpy((char*)pInfo->serialNumber, "serial");
+      write_pk11_str(pInfo->label, token_label, strlen(token_label), 32);
+      write_pk11_str(pInfo->manufacturerID, manufacturer_id, strlen(manufacturer_id), 32);
+      write_pk11_str(pInfo->model, token_model, strlen(token_model), 16);
+      write_pk11_str(pInfo->serialNumber, token_serial, strlen(token_serial), 16);
 
       // TODO: Add CKF_RNG.
       pInfo->flags = CKF_TOKEN_INITIALIZED;
