@@ -118,6 +118,12 @@ object_class(CK_OBJECT_HANDLE hObject)
   return (hObject == 1) ? CKO_PUBLIC_KEY : CKO_PRIVATE_KEY;
 }
 
+// create deep copy
+CK_ATTRIBUTE_FULL::CK_ATTRIBUTE_FULL(CK_ATTRIBUTE attr)
+    :type_(attr.type), data_(static_cast<char*>(attr.pValue), static_cast<char*>(attr.pValue) + attr.ulValueLen)
+{
+}
+
 Session::Session(const Config& config)
     :config_(config)
 {
@@ -134,8 +140,10 @@ void
 Session::FindObjectsInit(CK_ATTRIBUTE_PTR filters, int nfilters)
 {
   findpos_ = 1; // Handles can't be 0, or cryptoki will interpret it as an error
-  find_filters_ = filters;
-  find_nfilters_ = nfilters;
+  // create deep copy of attribute filter array
+  // it's possible that the memory of attribute filter array be reclaimed by the caller
+  // between the call of FindObjectsInit and FindObjects
+  find_filters_ = std::vector<CK_ATTRIBUTE_FULL>(filters, filters + nfilters);
 }
 
 int
@@ -144,14 +152,17 @@ Session::FindObjects(CK_OBJECT_HANDLE_PTR obj, int maxobj)
   int numFound = 0;
   for (; numFound < maxobj && findpos_ <= 2; findpos_++) {
     bool filterRejected = false;
-    for (int i = 0; i < find_nfilters_; i++) {
-      if (find_filters_[i].type == CKA_CLASS) {
-        if (*static_cast<CK_OBJECT_CLASS*>(find_filters_[i].pValue) != object_class(findpos_)) {
+    for (auto& x : find_filters_) {
+      if (x.type_ == CKA_CLASS) {
+        // match object class
+        // only CKO_PUBLIC_KEY and CKO_PRIVATE_KEY is allowed
+        if (*reinterpret_cast<CK_OBJECT_CLASS*>(x.data_.data()) != object_class(findpos_)) {
           filterRejected = true;
           break;
         }
       } else {
         // Ignore all other filters
+        // TODO: implement CKA_ID and CKA_LABEL match
       }
     }
     if (!filterRejected) {
