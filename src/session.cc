@@ -309,7 +309,7 @@ getPrivateKeyAttribute(const Config& config, CK_ATTRIBUTE_PTR pAttribute)
       *(CK_BBOOL *)(pAttribute->pValue) = true;
     }
     return true;
-
+#ifdef CKA_WRAP_WITH_TRUSTED
   case CKA_WRAP_WITH_TRUSTED:
     config.debug_log("   Attribute: Wrap with Trusted");
     pAttribute->ulValueLen = sizeof(CK_BBOOL);
@@ -317,7 +317,7 @@ getPrivateKeyAttribute(const Config& config, CK_ATTRIBUTE_PTR pAttribute)
       *(CK_BBOOL *)(pAttribute->pValue) = false;
     }
     return true;
-
+#endif
   default:
     return false;
   }
